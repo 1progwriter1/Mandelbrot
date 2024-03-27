@@ -46,30 +46,35 @@ int main() {
             float x_0 = ((-400.f) * dx + xOffset) * x_scale * 800 / 600;
             float y_0 = (((float) y_index - 300.f) * dy + yOffset) * y_scale;
 
-            for (unsigned int x_index = 0; x_index < 800; x_index++, x_0 += dx) {
+            for (unsigned int x_index = 0; x_index < 800; x_index += 4, x_0 += dx * 4) {
 
-                float x = x_0;
-                float y = y_0;
+                float X0[4] = {x_0, x_0 + dx, x_0 + dx * 2, x_0};
+                float Y0[4] = {y_0, y_0 + dy, y_0 + dy * 2, y_0};
 
-                bool is_inside = true;
+                float X[4] = {};    for (size_t i = 0; i < 4; i++) X[i] = X0[i];
+                float Y[4] = {};    for (size_t i = 0; i < 4; i++) Y[i] = Y0[i];
+
+                bool is_inside[4] = {true, true, true, true};
                 for (size_t i = 0; i < MAX_DOT_INDEX; i++) {
 
-                    float x2 = x * x;
-                    float y2 = y * y;
-                    float xy = x * y;
-                    float radius_square = x2 + y2;
+                    float x2[4] = {};   for (size_t j = 0; j < 4; j++) x2[j] = X[j] * X[j];
+                    float y2[4] = {};   for (size_t j = 0; j < 4; j++) y2[j] = Y[j] * Y[j];
+                    float xy[4] = {};   for (size_t j = 0; j < 4; j++) xy[j] = X[j] * Y[j];
+                    float r2[4] = {};   for (size_t j = 0; j < 4; j++) r2[j] = x2[j] + y2[j];
 
-                    if (radius_square >= MAX_RADIUS_SQUARE) {
-                        is_inside = false;
-                        break;
+                    for (size_t j = 0; j < 4; j++) {
+                        if (!is_inside[j])  continue;
+                        is_inside[j] = r2[j] <= MAX_RADIUS_SQUARE;
                     }
 
-                    x = x2 - y2 + x_0;
-                    y = xy + xy + y_0;
+                    for (size_t j = 0; j < 4; j++) X[j] = x2[j] - y2[j] + X0[j];
+                    for (size_t j = 0; j < 4; j++) Y[j] = xy[j] + xy[j] + Y0[j];
                 }
 
-                if (is_inside) image.setPixel(x_index, y_index, sf::Color::Black);
-                else image.setPixel(x_index, y_index, sf::Color::White);
+                for (unsigned int i = 0; i < 4; i++) {
+                    if (is_inside[i]) image.setPixel(x_index + i, y_index, sf::Color::Black);
+                    else image.setPixel(x_index + i, y_index, sf::Color::White);
+                }
             }
         }
 

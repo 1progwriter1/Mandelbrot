@@ -4,10 +4,10 @@ CFLAGS=-D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Waggressive-loop-
 COMP=g++
 
 %.o : %.cpp
-	$(COMP) $(CFLAGS) -c $< -o $@
+	$(COMP) $(CFLAGS) -O3 -c $< -o $@
 
 %.out : %.o
-	$(COMP) $(CFLAGS) $< -lsfml-graphics -lsfml-window -lsfml-system -o $@
+	$(COMP) $(CFLAGS) -O3 $< -lsfml-graphics -lsfml-window -lsfml-system -o $@
 
 run:
 	LIBGL_ALWAYS_INDIRECT=1 ./no_sse.out
