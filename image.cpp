@@ -9,6 +9,8 @@ int main() {
 
     // const sf::Color colors[4] = {sf::Color::Red, sf::Color::Green, sf::Color::Blue, sf::Color::Yellow};
 
+    sf::Texture texture = {};
+    sf::Sprite sprite = {};
     sf::Image image;
     image.create(800, 600);
 
@@ -48,6 +50,8 @@ int main() {
     }
 
     image.saveToFile("mandelbrot.png");
+    texture.loadFromImage(image);
+    sprite.setTexture(texture);
 
     return 0;
 }

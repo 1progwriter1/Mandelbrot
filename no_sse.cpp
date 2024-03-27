@@ -3,6 +3,8 @@
 
 const size_t MAX_DOT_INDEX = 100;
 const float MAX_RADIUS_SQUARE = 10.f;
+const float dx = 1/200.f;
+const float dy = 1/150.f;
 
 int main() {
 
@@ -14,6 +16,10 @@ int main() {
     sf::Image image = {};
     image.create(800, 600);
 
+    float xOffset = 0.f;
+    float yOffset = 0.f;
+    float scale   = 1.f;
+
     while (window.isOpen()) {
 
         sf::Event event;
@@ -22,18 +28,22 @@ int main() {
             if (event.type == sf::Event::Closed)
                 window.close();
 
-            if (event.type == sf::Event::KeyPressed)
-                if (event.key.code == sf::Keyboard::Escape)
-                    window.close();
-        }
+            if (event.type == sf::Event::KeyPressed) {
+                if (event.key.code == sf::Keyboard::Escape) window.close();
+                if (event.key.code == sf::Keyboard::Left)   xOffset -= dx * 10.f;
+                if (event.key.code == sf::Keyboard::Right)  xOffset += dx * 10.f;
+                if (event.key.code == sf::Keyboard::Up)     yOffset += dy * 10.f;
+                if (event.key.code == sf::Keyboard::Down)   yOffset -= dy * 10.f;
+                if (event.key.code == sf::Keyboard::A)      scale   += dx * 10.f;
+                if (event.key.code == sf::Keyboard::Z)      scale   -= dx * 10.f;
+            }
 
-        float dx = 1/200.f;
-        float dy = 1/150.f;
+        }
 
         for (unsigned int y_index = 0; y_index < 600; y_index++) {
 
-            float x_0 = (-400.f) * dx;
-            float y_0 = ((float) y_index - 300.f) * dy;
+            float x_0 = (-400.f) * dx + xOffset;
+            float y_0 = ((float) y_index - 300.f) * dy + yOffset;
 
             for (unsigned int x_index = 0; x_index < 800; x_index++, x_0 += dx) {
 
