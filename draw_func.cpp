@@ -17,6 +17,8 @@ void SetWindowData(WindowData *data) {
     data->offset_x  = 0.f;
     data->offset_y  = 0.f;
 
+    data->scale_ratio = (float) data->height / (float) data->width;
+
 }
 
 void ProceedKeyStrokes(sf::RenderWindow &window, WindowData *data) {
@@ -35,8 +37,9 @@ void ProceedKeyStrokes(sf::RenderWindow &window, WindowData *data) {
                 if (event.key.code == sf::Keyboard::Right)  data->offset_x -= data->dx * 10.f;
                 if (event.key.code == sf::Keyboard::Up)     data->offset_y += data->dy * 10.f;
                 if (event.key.code == sf::Keyboard::Down)   data->offset_y -= data->dy * 10.f;
-                if (event.key.code == sf::Keyboard::A)      data->scale    += data->dx * 10.f;
-                if (event.key.code == sf::Keyboard::Z)      data->scale    -= data->dx * 10.f;
+
+                if (event.key.code == sf::Keyboard::Z)      if (data->scale > data->dx * 10.f)  data->scale    -= data->dx * 10.f;
+                if (event.key.code == sf::Keyboard::A)                                          data->scale    += data->dx * 10.f;
             }
     }
 }

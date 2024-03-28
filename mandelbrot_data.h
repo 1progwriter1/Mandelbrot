@@ -24,6 +24,7 @@ struct WindowData {
     float offset_x;
     float offset_y;
     float scale;
+    float scale_ratio;
 };
 
 #endif

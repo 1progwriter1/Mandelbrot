@@ -33,40 +33,41 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
 
     assert(data);
 
-    float scale_ratio = (float) data->height / (float) data->width;
+    float dy = data->dy * data->scale * data->scale_ratio;
+    float dx = data->dx * data->scale;
 
     for (unsigned int y_index = 0; y_index < data->height; y_index++) {
 
-            float x_0 = (-((float) data->width) / 2) * data->dx * data->scale + data->offset_x;
-            float y_0 = (((float) y_index) - (float) data->height / 2) * data->dy * data->scale * scale_ratio + data->offset_y;
+        float x_0 = (-((float) data->width) / 2) * dx + data->offset_x * data->scale;
+        float y_0 = (((float) y_index) - (float) data->height / 2) * dy + data->offset_y * data->scale * data->scale_ratio;
 
-            for (unsigned int x_index = 0; x_index < data->width; x_index++, x_0 += data->dx) {
+        for (unsigned int x_index = 0; x_index < data->width; x_index++, x_0 += dx) {
 
-                float x = x_0;
-                float y = y_0;
+            float x = x_0;
+            float y = y_0;
 
-                bool is_inside = true;
-                for (size_t i = 0; i < MAX_DOT_INDEX; i++) {
+            bool is_inside = true;
+            for (size_t i = 0; i < MAX_DOT_INDEX; i++) {
 
-                    float x2 = x * x;
-                    float y2 = y * y;
-                    float xy = x * y;
-                    float radius_square = x2 + y2;
+                float x2 = x * x;
+                float y2 = y * y;
+                float xy = x * y;
+                float radius_square = x2 + y2;
 
-                    if (radius_square >= MAX_RADIUS_SQUARE) {
-                        is_inside = false;
-                        break;
-                    }
-
-                    x = x2 - y2 + x_0;
-                    y = xy + xy + y_0;
+                if (radius_square >= MAX_RADIUS_SQUARE) {
+                    is_inside = false;
+                    break;
                 }
 
-                size_t index = y_index * data->width + x_index;
-                pixels[index].position = sf::Vector2f((float) x_index, (float) y_index);
-                if (is_inside)  pixels[index].color = sf::Color::Black;
-                else            pixels[index].color = sf::Color::White;
+                x = x2 - y2 + x_0;
+                y = xy + xy + y_0;
             }
+
+            size_t index = y_index * data->width + x_index;
+            pixels[index].position = sf::Vector2f((float) x_index, (float) y_index);
+            if (is_inside)  pixels[index].color = sf::Color::Black;
+            else            pixels[index].color = sf::Color::White;
         }
+    }
 
 }

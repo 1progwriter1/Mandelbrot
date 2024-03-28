@@ -33,19 +33,18 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
 
     assert(data);
 
-    float scale_ratio = (float) data->height / (float) data->width;
+    float dy = data->dy * data->scale * data->scale_ratio;
+    float dx = data->dx * data->scale;
 
     for (unsigned int y_index = 0; y_index < 600; y_index++) {
 
-        float x_0 = (-((float) data->width) / 2) * data->dx * data->scale + data->offset_x;
-        float y_0 = (((float) y_index) - (float) data->height / 2) * data->dy * data->scale * scale_ratio + data->offset_y;
+        float x_0 = (-((float) data->width) / 2) * dx + data->offset_x * data->scale;
+        float y_0 = (((float) y_index) - (float) data->height / 2) * dy + data->offset_y * data->scale * data->scale_ratio;
 
-        for (unsigned int x_index = 0; x_index < 800; x_index += 8, x_0 += data->dx * 8) {
+        for (unsigned int x_index = 0; x_index < 800; x_index += 8, x_0 += dx * 8) {
 
-            float X0[8] = {x_0, x_0 + data->dx, x_0 + data->dx * 2, x_0 + data->dx * 3, x_0 + data->dx * 4,
-                           x_0 + data->dx * 5, x_0 + data->dx * 6, x_0 + data->dx * 7};
-            float Y0[8] = {y_0, y_0 + data->dy, y_0 + data->dy * 2, y_0 + data->dy * 3, y_0 + data->dy * 4,
-                           y_0 + data->dy * 5, y_0 + data->dy * 6, y_0 + data->dy * 7};
+            float X0[8] = {x_0, x_0 + dx, x_0 + dx * 2, x_0 + dx * 3, x_0 + dx * 4, x_0 + dx * 5, x_0 + dx * 6, x_0 + dx * 7};
+            float Y0[8] = {y_0, y_0 + dy, y_0 + dy * 2, y_0 + dy * 3, y_0 + dy * 4, y_0 + dy * 5, y_0 + dy * 6, y_0 + dy * 7};
 
             float X[8] = {};    for (size_t i = 0; i < 8; i++) X[i] = X0[i];
             float Y[8] = {};    for (size_t i = 0; i < 8; i++) Y[i] = Y0[i];

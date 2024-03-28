@@ -37,16 +37,17 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
 
     assert(data);
 
-    float scale_ratio = (float) data->height / (float) data->width;
+    float dy = data->dy * data->scale * data->scale_ratio;
+    float dx = data->dx * data->scale;
 
     for (unsigned int y_index = 0; y_index < 600; y_index++) {
 
-       float x_0 = (-((float) data->width) / 2) * data->dx * data->scale + data->offset_x;
-        float y_0 = (((float) y_index) - (float) data->height / 2) * data->dy * data->scale * scale_ratio + data->offset_y;
+        float x_0 = (-((float) data->width) / 2) * dx + data->offset_x * data->scale;
+        float y_0 = (((float) y_index) - (float) data->height / 2) * dy + data->offset_y * data->scale * data->scale_ratio;
 
-        for (unsigned int x_index = 0; x_index < 800; x_index += 8, x_0 += data->dx * 8) {
+        for (unsigned int x_index = 0; x_index < 800; x_index += 8, x_0 += dx * 8) {
 
-            __m256 X0 = _mm256_add_ps(_mm256_set1_ps(x_0), _mm256_mul_ps(_76543210, _mm256_set1_ps(data->dx)));
+            __m256 X0 = _mm256_add_ps(_mm256_set1_ps(x_0), _mm256_mul_ps(_76543210, _mm256_set1_ps(dx)));
             __m256 Y0 = _mm256_set1_ps(y_0);
 
             __m256 X = X0;
