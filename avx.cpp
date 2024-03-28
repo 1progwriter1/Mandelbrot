@@ -4,21 +4,18 @@
 #include <immintrin.h>
 
 const size_t MAX_DOT_INDEX = 100;
-const float MAX_RADIUS_SQUARE = 10.f;
 const float dx = 1/200.f;
 const float dy = 1/150.f;
 
 const __m256 _76543210 = _mm256_set_ps(7.f, 6.f, 5.f, 4.f, 3.f, 2.f, 1.f, 0.f);
+const __m256 MAX_RADIUS_SQUARE = _mm256_set1_ps(100.f);
 
 int main() {
 
     const sf::Color colors[4] = {sf::Color::Red, sf::Color::Green, sf::Color::Blue, sf::Color::Yellow};
 
     sf::RenderWindow window(sf::VideoMode(800, 600), "Mandelbrot");
-    sf::Texture texture = {};
-    sf::Sprite sprite = {};
-    sf::Image image = {};
-    image.create(800, 600);
+    sf::VertexArray pixels(sf::Points, 800 * 600);
 
     float xOffset = 0.f;
     float yOffset = 0.f;
@@ -52,40 +49,45 @@ int main() {
 
             for (unsigned int x_index = 0; x_index < 800; x_index += 8, x_0 += dx * 8) {
 
-                __m256d X0 = _mm256_add_pd(_mm256_set1_pd(x_0), _mm256_mul_pd(_76543210, _mm256_set1_pd(dx)));
-                float Y0[8] = {y_0, y_0 + dy, y_0 + dy * 2, y_0 + dy * 3, y_0 + dy * 4, y_0 + dy * 5, y_0 + dy * 6, y_0 + dy * 7};
+                __m256 X0 = _mm256_add_ps(_mm256_set1_ps(x_0), _mm256_mul_ps(_76543210, _mm256_set1_ps(dx)));
+                __m256 Y0 = _mm256_set1_ps(y_0);
 
-                float X[8] = {};    for (size_t i = 0; i < 8; i++) X[i] = X0[i];
-                float Y[8] = {};    for (size_t i = 0; i < 8; i++) Y[i] = Y0[i];
+                __m256 X = X0;
+                __m256 Y = Y0;
 
-                bool is_inside[8] = {true, true, true, true, true, true, true, true};
+                __m256 is_inside = _mm256_set1_ps(0);
+                __m256i cur_dot = _mm256_set1_epi32(0);
+
                 for (size_t i = 0; i < MAX_DOT_INDEX; i++) {
 
-                    float x2[8] = {};   for (size_t j = 0; j < 8; j++) x2[j] = X[j] * X[j];
-                    float y2[8] = {};   for (size_t j = 0; j < 8; j++) y2[j] = Y[j] * Y[j];
-                    float xy[8] = {};   for (size_t j = 0; j < 8; j++) xy[j] = X[j] * Y[j];
-                    float r2[8] = {};   for (size_t j = 0; j < 8; j++) r2[j] = x2[j] + y2[j];
+                    __m256 x2 = _mm256_mul_ps(X, X);
+                    __m256 y2 = _mm256_mul_ps(Y, Y);
+                    __m256 xy = _mm256_mul_ps(X, Y);
+                    __m256 r2 = _mm256_add_ps(x2, y2);
 
-                    for (size_t j = 0; j < 8; j++) {
-                        if (!is_inside[j])  continue;
-                        is_inside[j] = r2[j] <= MAX_RADIUS_SQUARE;
-                    }
+                    is_inside = _mm256_cmp_ps(r2, MAX_RADIUS_SQUARE, _CMP_LE_OQ);
 
-                    for (size_t j = 0; j < 8; j++) X[j] = x2[j] - y2[j] + X0[j];
-                    for (size_t j = 0; j < 8; j++) Y[j] = xy[j] + xy[j] + Y0[j];
+                    int mask = _mm256_movemask_ps(is_inside);
+                    if (!mask) break;
+
+                    X = _mm256_add_ps(_mm256_sub_ps(x2, y2), X0);
+                    Y = _mm256_add_ps(_mm256_add_ps(xy, xy), Y0);
+
+                    cur_dot = _mm256_add_epi32(cur_dot, _mm256_cvtps_epi32(is_inside));
                 }
 
+                int *pn = (int *) &cur_dot;
                 for (unsigned int i = 0; i < 8; i++) {
-                    if (is_inside[i]) image.setPixel(x_index + i, y_index, sf::Color::Black);
-                    else image.setPixel(x_index + i, y_index, sf::Color::White);
+                    size_t index = y_index * 800 + x_index + i;
+                    pixels[index].position = sf::Vector2f(x_index + i, y_index);
+                    if ((size_t) pn[i] < MAX_DOT_INDEX) pixels[y_index * 800 + x_index + i].color = sf::Color::Black;
+                    else                                pixels[y_index * 800 + x_index + i].color = sf::Color::White;
                 }
             }
         }
 
-        texture.loadFromImage(image);
-        sprite.setTexture(texture);
-        sprite.setPosition(0, 0);
-        window.draw(sprite);
+        window.clear(sf::Color::Black);
+        window.draw(pixels);
         window.display();
     }
 
