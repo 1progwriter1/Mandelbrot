@@ -1,11 +1,14 @@
 #include <SFML/Graphics.hpp>
 #include <stdio.h>
 #include <emmintrin.h>
+#include <immintrin.h>
 
 const size_t MAX_DOT_INDEX = 100;
 const float MAX_RADIUS_SQUARE = 10.f;
 const float dx = 1/200.f;
 const float dy = 1/150.f;
+
+const __m256 _76543210 = _mm256_set_ps(7.f, 6.f, 5.f, 4.f, 3.f, 2.f, 1.f, 0.f);
 
 int main() {
 
@@ -47,32 +50,32 @@ int main() {
             float x_0 = ((-400.f) * dx + xOffset) * x_scale * 800 / 600;
             float y_0 = (((float) y_index - 300.f) * dy + yOffset) * y_scale;
 
-            for (unsigned int x_index = 0; x_index < 800; x_index += 4, x_0 += dx * 4) {
+            for (unsigned int x_index = 0; x_index < 800; x_index += 8, x_0 += dx * 8) {
 
-                float X0[4] = {x_0, x_0 + dx, x_0 + dx * 2, x_0};
-                float Y0[4] = {y_0, y_0 + dy, y_0 + dy * 2, y_0};
+                __m256d X0 = _mm256_add_pd(_mm256_set1_pd(x_0), _mm256_mul_pd(_76543210, _mm256_set1_pd(dx)));
+                float Y0[8] = {y_0, y_0 + dy, y_0 + dy * 2, y_0 + dy * 3, y_0 + dy * 4, y_0 + dy * 5, y_0 + dy * 6, y_0 + dy * 7};
 
-                float X[4] = {};    for (size_t i = 0; i < 4; i++) X[i] = X0[i];
-                float Y[4] = {};    for (size_t i = 0; i < 4; i++) Y[i] = Y0[i];
+                float X[8] = {};    for (size_t i = 0; i < 8; i++) X[i] = X0[i];
+                float Y[8] = {};    for (size_t i = 0; i < 8; i++) Y[i] = Y0[i];
 
-                bool is_inside[4] = {true, true, true, true};
+                bool is_inside[8] = {true, true, true, true, true, true, true, true};
                 for (size_t i = 0; i < MAX_DOT_INDEX; i++) {
 
-                    float x2[4] = {};   for (size_t j = 0; j < 4; j++) x2[j] = X[j] * X[j];
-                    float y2[4] = {};   for (size_t j = 0; j < 4; j++) y2[j] = Y[j] * Y[j];
-                    float xy[4] = {};   for (size_t j = 0; j < 4; j++) xy[j] = X[j] * Y[j];
-                    float r2[4] = {};   for (size_t j = 0; j < 4; j++) r2[j] = x2[j] + y2[j];
+                    float x2[8] = {};   for (size_t j = 0; j < 8; j++) x2[j] = X[j] * X[j];
+                    float y2[8] = {};   for (size_t j = 0; j < 8; j++) y2[j] = Y[j] * Y[j];
+                    float xy[8] = {};   for (size_t j = 0; j < 8; j++) xy[j] = X[j] * Y[j];
+                    float r2[8] = {};   for (size_t j = 0; j < 8; j++) r2[j] = x2[j] + y2[j];
 
-                    for (size_t j = 0; j < 4; j++) {
+                    for (size_t j = 0; j < 8; j++) {
                         if (!is_inside[j])  continue;
                         is_inside[j] = r2[j] <= MAX_RADIUS_SQUARE;
                     }
 
-                    for (size_t j = 0; j < 4; j++) X[j] = x2[j] - y2[j] + X0[j];
-                    for (size_t j = 0; j < 4; j++) Y[j] = xy[j] + xy[j] + Y0[j];
+                    for (size_t j = 0; j < 8; j++) X[j] = x2[j] - y2[j] + X0[j];
+                    for (size_t j = 0; j < 8; j++) Y[j] = xy[j] + xy[j] + Y0[j];
                 }
 
-                for (unsigned int i = 0; i < 4; i++) {
+                for (unsigned int i = 0; i < 8; i++) {
                     if (is_inside[i]) image.setPixel(x_index + i, y_index, sf::Color::Black);
                     else image.setPixel(x_index + i, y_index, sf::Color::White);
                 }
