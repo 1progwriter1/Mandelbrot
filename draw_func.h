@@ -2,7 +2,9 @@
 #define DRAW_FUNCTIONS_MANDELBROT
 
 #include <stdio.h>
+#include "mandelbrot_data.h"
 
-int ProceedKeyStrokes();
+void SetWindowData(WindowData *data);
+void ProceedKeyStrokes(sf::RenderWindow &window, WindowData *data);
 
 #endif

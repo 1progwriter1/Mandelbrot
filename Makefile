@@ -4,11 +4,15 @@ SIMD_FLAGS = -mavx -mavx2
 
 COMP=g++
 
+LIB_SRC=draw_func.cpp
+LIB_OBJ=draw_func.o
+SFML=-lsfml-graphics -lsfml-window -lsfml-system
+
 %.o : %.cpp
 	$(COMP) $(CFLAGS) $(SIMD_FLAGS) -O3 -c $< -o $@
 
 %.out : %.o
-	$(COMP) $(CFLAGS) $(SIMD_FLAGS) -O3 $< -lsfml-graphics -lsfml-window -lsfml-system -o $@
+	$(COMP) $(CFLAGS) $(SIMD_FLAGS) -O3 $< $(LIB_OBJ) -o $@ $(SFML)
 
 run:
 	LIBGL_ALWAYS_INDIRECT=1 ./no_sse.out

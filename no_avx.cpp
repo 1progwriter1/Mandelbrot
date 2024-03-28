@@ -1,49 +1,46 @@
 #include <SFML/Graphics.hpp>
 #include <stdio.h>
+#include "mandelbrot_data.h"
+#include "draw_func.h"
+#include <assert.h>
 
-const size_t MAX_DOT_INDEX = 100;
-const float MAX_RADIUS_SQUARE = 100.f;
-const float dx = 1/200.f;
-const float dy = 1/150.f;
+static void SetPixels(sf::VertexArray &pixels, WindowData *data);
 
 int main() {
 
-    const sf::Color colors[4] = {sf::Color::Red, sf::Color::Green, sf::Color::Blue, sf::Color::Yellow};
+    WindowData data = {};
+    SetWindowData(&data);
 
-    sf::RenderWindow window(sf::VideoMode(800, 600), "Mandelbrot");
-    sf::VertexArray pixels(sf::Points, 800 * 600);
-
-    float xOffset = 0.f;
-    float yOffset = 0.f;
-    float x_scale = 1.f;
-    float y_scale = 1.f;
+    sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Mandelbrot");
+    sf::VertexArray pixels(sf::Points, SCREEN_WIDTH * SCREEN_HEIGHT);
 
     while (window.isOpen()) {
 
-        sf::Event event;
-        while (window.pollEvent(event)) {
+        ProceedKeyStrokes(window, &data);
+        if (!window.isOpen())   break;
 
-            if (event.type == sf::Event::Closed)
-                window.close();
+        SetPixels(pixels, &data);
 
-            if (event.type == sf::Event::KeyPressed) {
-                if (event.key.code == sf::Keyboard::Escape) window.close();
-                if (event.key.code == sf::Keyboard::Left)   xOffset += dx * 10.f;
-                if (event.key.code == sf::Keyboard::Right)  xOffset -= dx * 10.f;
-                if (event.key.code == sf::Keyboard::Up)     yOffset += dy * 10.f;
-                if (event.key.code == sf::Keyboard::Down)   yOffset -= dy * 10.f;
-                if (event.key.code == sf::Keyboard::A)     {x_scale += dx * 10.f; y_scale += dy * 10.f;}
-                if (event.key.code == sf::Keyboard::Z)     {x_scale -= dx * 10.f; y_scale -= dy * 10.f;}
-            }
+        window.clear(sf::Color::Black);
+        window.draw(pixels);
+        window.display();
+    }
 
-        }
+    return 0;
+}
 
-        for (unsigned int y_index = 0; y_index < 600; y_index++) {
+static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
 
-            float x_0 = ((-400.f) * dx + xOffset) * x_scale * 800 / 600;
-            float y_0 = (((float) y_index - 300.f) * dy + yOffset) * y_scale;
+    assert(data);
 
-            for (unsigned int x_index = 0; x_index < 800; x_index++, x_0 += dx) {
+    float scale_ratio = (float) data->height / (float) data->width;
+
+    for (unsigned int y_index = 0; y_index < data->height; y_index++) {
+
+            float x_0 = (-((float) data->width) / 2) * data->dx * data->scale + data->offset_x;
+            float y_0 = (((float) y_index) - (float) data->height / 2) * data->dy * data->scale * scale_ratio + data->offset_y;
+
+            for (unsigned int x_index = 0; x_index < data->width; x_index++, x_0 += data->dx) {
 
                 float x = x_0;
                 float y = y_0;
@@ -65,17 +62,11 @@ int main() {
                     y = xy + xy + y_0;
                 }
 
-                size_t index = y_index * 800 + x_index;
+                size_t index = y_index * data->width + x_index;
                 pixels[index].position = sf::Vector2f((float) x_index, (float) y_index);
                 if (is_inside)  pixels[index].color = sf::Color::Black;
                 else            pixels[index].color = sf::Color::White;
             }
         }
 
-        window.clear(sf::Color::Black);
-        window.draw(pixels);
-        window.display();
-    }
-
-    return 0;
 }
