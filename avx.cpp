@@ -73,13 +73,13 @@ int main() {
                     X = _mm256_add_ps(_mm256_sub_ps(x2, y2), X0);
                     Y = _mm256_add_ps(_mm256_add_ps(xy, xy), Y0);
 
-                    cur_dot = _mm256_add_epi32(cur_dot, _mm256_cvtps_epi32(is_inside));
+                    cur_dot = _mm256_sub_epi32(cur_dot, _mm256_cvtps_epi32(is_inside));
                 }
 
                 int *pn = (int *) &cur_dot;
                 for (unsigned int i = 0; i < 8; i++) {
                     size_t index = y_index * 800 + x_index + i;
-                    pixels[index].position = sf::Vector2f(x_index + i, y_index);
+                    pixels[index].position = sf::Vector2f((float) (x_index + i), (float) y_index);
                     if ((size_t) pn[i] < MAX_DOT_INDEX) pixels[y_index * 800 + x_index + i].color = sf::Color::Black;
                     else                                pixels[y_index * 800 + x_index + i].color = sf::Color::White;
                 }

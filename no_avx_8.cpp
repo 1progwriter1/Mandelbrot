@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 const size_t MAX_DOT_INDEX = 100;
-const float MAX_RADIUS_SQUARE = 10.f;
+const float MAX_RADIUS_SQUARE = 100.f;
 const float dx = 1/200.f;
 const float dy = 1/150.f;
 
@@ -11,10 +11,7 @@ int main() {
     const sf::Color colors[4] = {sf::Color::Red, sf::Color::Green, sf::Color::Blue, sf::Color::Yellow};
 
     sf::RenderWindow window(sf::VideoMode(800, 600), "Mandelbrot");
-    sf::Texture texture = {};
-    sf::Sprite sprite = {};
-    sf::Image image = {};
-    image.create(800, 600);
+    sf::VertexArray pixels(sf::Points, 800 * 600);
 
     float xOffset = 0.f;
     float yOffset = 0.f;
@@ -54,34 +51,37 @@ int main() {
                 float X[8] = {};    for (size_t i = 0; i < 8; i++) X[i] = X0[i];
                 float Y[8] = {};    for (size_t i = 0; i < 8; i++) Y[i] = Y0[i];
 
-                bool is_inside[8] = {true, true, true, true, true, true, true, true};
-                for (size_t i = 0; i < MAX_DOT_INDEX; i++) {
+                size_t dot_index[8] = {};
+                bool is_inside = true;
+                for (size_t i = 0; i < MAX_DOT_INDEX && is_inside; i++) {
 
-                    float x2[8] = {};   for (size_t j = 0; j < 8; j++) x2[j] = X[j] * X[j];
-                    float y2[8] = {};   for (size_t j = 0; j < 8; j++) y2[j] = Y[j] * Y[j];
-                    float xy[8] = {};   for (size_t j = 0; j < 8; j++) xy[j] = X[j] * Y[j];
+                    float x2[8] = {};   for (size_t j = 0; j < 8; j++) x2[j] =  X[j] * X[j];
+                    float y2[8] = {};   for (size_t j = 0; j < 8; j++) y2[j] =  Y[j] * Y[j];
+                    float xy[8] = {};   for (size_t j = 0; j < 8; j++) xy[j] =  X[j] * Y[j];
                     float r2[8] = {};   for (size_t j = 0; j < 8; j++) r2[j] = x2[j] + y2[j];
 
-                    for (size_t j = 0; j < 8; j++) {
-                        if (!is_inside[j])  continue;
-                        is_inside[j] = r2[j] <= MAX_RADIUS_SQUARE;
-                    }
+                    is_inside = false;
+                    for (size_t j = 0; j < 8; j++)
+                        if (r2[j] <= MAX_RADIUS_SQUARE) {
+                            dot_index[j]++;
+                            is_inside = true;
+                        }
 
-                    for (size_t j = 0; j < 8; j++) X[j] = x2[j] - y2[j] + X0[j];
-                    for (size_t j = 0; j < 8; j++) Y[j] = xy[j] + xy[j] + Y0[j];
+                    for (size_t j = 0; j < 8; j++)  X[j] = x2[j] - y2[j] + X0[j];
+                    for (size_t j = 0; j < 8; j++)  Y[j] = xy[j] + xy[j] + Y0[j];
                 }
 
                 for (unsigned int i = 0; i < 8; i++) {
-                    if (is_inside[i]) image.setPixel(x_index + i, y_index, sf::Color::Black);
-                    else image.setPixel(x_index + i, y_index, sf::Color::White);
+                    size_t index = y_index * 800 + x_index + i;
+                    pixels[index].position = sf::Vector2f((float) (x_index + i),(float) y_index);
+                    if (dot_index[i] < MAX_DOT_INDEX)   pixels[index].color = sf::Color::Black;
+                    else                                pixels[index].color = sf::Color::White;
                 }
             }
         }
 
-        texture.loadFromImage(image);
-        sprite.setTexture(texture);
-        sprite.setPosition(0, 0);
-        window.draw(sprite);
+        window.clear(sf::Color::Black);
+        window.draw(pixels);
         window.display();
     }
 

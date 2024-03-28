@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 const size_t MAX_DOT_INDEX = 100;
-const float MAX_RADIUS_SQUARE = 10.f;
+const float MAX_RADIUS_SQUARE = 100.f;
 const float dx = 1/200.f;
 const float dy = 1/150.f;
 
@@ -11,10 +11,7 @@ int main() {
     const sf::Color colors[4] = {sf::Color::Red, sf::Color::Green, sf::Color::Blue, sf::Color::Yellow};
 
     sf::RenderWindow window(sf::VideoMode(800, 600), "Mandelbrot");
-    sf::Texture texture = {};
-    sf::Sprite sprite = {};
-    sf::Image image = {};
-    image.create(800, 600);
+    sf::VertexArray pixels(sf::Points, 800 * 600);
 
     float xOffset = 0.f;
     float yOffset = 0.f;
@@ -68,15 +65,15 @@ int main() {
                     y = xy + xy + y_0;
                 }
 
-                if (is_inside) image.setPixel(x_index, y_index, sf::Color::Black);
-                else image.setPixel(x_index, y_index, sf::Color::White);
+                size_t index = y_index * 800 + x_index;
+                pixels[index].position = sf::Vector2f((float) x_index, (float) y_index);
+                if (is_inside)  pixels[index].color = sf::Color::Black;
+                else            pixels[index].color = sf::Color::White;
             }
         }
 
-        texture.loadFromImage(image);
-        sprite.setTexture(texture);
-        sprite.setPosition(0, 0);
-        window.draw(sprite);
+        window.clear(sf::Color::Black);
+        window.draw(pixels);
         window.display();
     }
 
