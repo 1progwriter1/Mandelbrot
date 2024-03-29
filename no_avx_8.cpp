@@ -6,12 +6,15 @@
 #include <immintrin.h>
 
 
-static void SetPixels(sf::VertexArray &pixels, WindowData *data);
+static void SetPixels(sf::VertexArray &pixels, WindowData *data, FILE *fn);
 
 int main() {
 
     WindowData data = {};
     SetWindowData(&data);
+
+    FILE *fn = fopen(NO_AVX_8_FILE, "w");
+    if (!fn)    return 1;
 
     sf::RenderWindow window(sf::VideoMode(800, 600), "Mandelbrot");
     sf::VertexArray pixels(sf::Points, 800 * 600);
@@ -20,21 +23,24 @@ int main() {
 
         ProceedKeyStrokes(window, &data);
 
-        SetPixels(pixels, &data);
+        SetPixels(pixels, &data, fn);
 
         window.clear(sf::Color::Black);
         window.draw(pixels);
         window.display();
     }
 
+    fclose(fn);
+
     return 0;
 }
 
-static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
+static void SetPixels(sf::VertexArray &pixels, WindowData *data, FILE *fn) {
 
     assert(data);
 
     #ifdef MEASURE
+    assert(fn);
     unsigned long long start = __rdtsc();
     #endif
 
@@ -54,21 +60,18 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
             float X[8] = {};    for (size_t i = 0; i < 8; i++) X[i] = X0[i];
             float Y[8] = {};    for (size_t i = 0; i < 8; i++) Y[i] = Y0[i];
 
-            size_t dot_index[8] = {};
-            bool is_inside = true;
-            for (size_t i = 0; i < MAX_DOT_INDEX && is_inside; i++) {
+            bool is_inside[8] = {true, true, true, true, true, true, true, true};
+            for (size_t i = 0; i < MAX_DOT_INDEX; i++) {
 
                 float x2[8] = {};   for (size_t j = 0; j < 8; j++) x2[j] =  X[j] * X[j];
                 float y2[8] = {};   for (size_t j = 0; j < 8; j++) y2[j] =  Y[j] * Y[j];
                 float xy[8] = {};   for (size_t j = 0; j < 8; j++) xy[j] =  X[j] * Y[j];
                 float r2[8] = {};   for (size_t j = 0; j < 8; j++) r2[j] = x2[j] + y2[j];
 
-                is_inside = false;
-                for (size_t j = 0; j < 8; j++)
-                    if (r2[j] <= MAX_RADIUS_SQUARE) {
-                        dot_index[j]++;
-                        is_inside = true;
-                    }
+                for (size_t j = 0; j < 8; j++) {
+                    if (!is_inside[j]) continue;
+                    is_inside[j] = r2[j] <= MAX_RADIUS_SQUARE;
+                }
 
                 for (size_t j = 0; j < 8; j++)  X[j] = x2[j] - y2[j] + X0[j];
                 for (size_t j = 0; j < 8; j++)  Y[j] = xy[j] + xy[j] + Y0[j];
@@ -77,14 +80,14 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
             for (unsigned int i = 0; i < 8; i++) {
                 size_t index = y_index * 800 + x_index + i;
                 pixels[index].position = sf::Vector2f((float) (x_index + i),(float) y_index);
-                if (dot_index[i] < MAX_DOT_INDEX)   pixels[index].color = sf::Color::Black;
-                else                                pixels[index].color = sf::Color::White;
+                if (is_inside[i])   pixels[index].color = sf::Color::Black;
+                else                pixels[index].color = sf::Color::White;
             }
         }
     }
 
     #ifdef MEASURE
     unsigned long long end = __rdtsc();
-    printf("%llu\n", end - start);
+    fprintf(fn, "%llu\n", end - start);
     #endif
 }

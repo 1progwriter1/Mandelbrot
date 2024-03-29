@@ -16,7 +16,7 @@ const unsigned int SCREEN_HEIGHT = 600;
 const float STEP_X = 1/200.f;
 const float STEP_Y = 1/150.f;
 
-const size_t MAX_DOT_INDEX = 100;
+const size_t MAX_DOT_INDEX = 256;
 const float MAX_RADIUS_SQUARE = 100.f;
 
 struct WindowData {

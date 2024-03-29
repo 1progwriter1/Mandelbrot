@@ -9,12 +9,15 @@
 const __m256 _76543210 = _mm256_set_ps(7.f, 6.f, 5.f, 4.f, 3.f, 2.f, 1.f, 0.f);
 const __m256 MAX_RADIUS_SQUARE_SIMD = _mm256_set1_ps(100.f);
 
-static void SetPixels(sf::VertexArray &pixels, WindowData *data);
+static void SetPixels(sf::VertexArray &pixels, WindowData *data, FILE *fn);
 
 int main() {
 
     WindowData data = {};
     SetWindowData(&data);
+
+    FILE *fn = fopen(AVX_FILE, "w");
+    if (!fn)    return 1;
 
     sf::RenderWindow window(sf::VideoMode(800, 600), "Mandelbrot");
     sf::VertexArray pixels(sf::Points, 800 * 600);
@@ -23,21 +26,24 @@ int main() {
 
         ProceedKeyStrokes(window, &data);
 
-        SetPixels(pixels, &data);
+        SetPixels(pixels, &data, fn);
 
         window.clear(sf::Color::Black);
         window.draw(pixels);
         window.display();
     }
 
+    fclose(fn);
+
     return 0;
 }
 
-static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
+static void SetPixels(sf::VertexArray &pixels, WindowData *data, FILE *fn) {
 
     assert(data);
 
     #ifdef MEASURE
+    assert(fn);
     unsigned long long start = __rdtsc();
     #endif
 
@@ -58,13 +64,12 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
             __m256 Y = Y0;
 
             __m256 is_inside = _mm256_set1_ps(0);
-            __m256i cur_dot = _mm256_set1_epi32(0);
+            __m256i cur_dot_index = _mm256_set1_epi32(0);
 
             for (size_t i = 0; i < MAX_DOT_INDEX; i++) {
 
                 __m256 x2 = _mm256_mul_ps(X, X);
                 __m256 y2 = _mm256_mul_ps(Y, Y);
-                __m256 xy = _mm256_mul_ps(X, Y);
                 __m256 r2 = _mm256_add_ps(x2, y2);
 
                 is_inside = _mm256_cmp_ps(r2, MAX_RADIUS_SQUARE_SIMD, _CMP_LE_OQ);
@@ -72,18 +77,22 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
                 int mask = _mm256_movemask_ps(is_inside);
                 if (!mask) break;
 
+                cur_dot_index = _mm256_add_epi32(cur_dot_index, _mm256_cvtps_epi32(is_inside));
+
+                __m256 xy = _mm256_mul_ps(X, Y);
                 X = _mm256_add_ps(_mm256_sub_ps(x2, y2), X0);
                 Y = _mm256_add_ps(_mm256_add_ps(xy, xy), Y0);
 
-                cur_dot = _mm256_sub_epi32(cur_dot, _mm256_cvtps_epi32(is_inside));
             }
 
-            int *pn = (int *) &cur_dot;
+            int *int_cur_dot = (int *) &cur_dot_index;
             for (unsigned int i = 0; i < 8; i++) {
                 size_t index = y_index * 800 + x_index + i;
                 pixels[index].position = sf::Vector2f((float) (x_index + i), (float) y_index);
-                if ((size_t) pn[i] < MAX_DOT_INDEX) pixels[y_index * 800 + x_index + i].color = sf::Color::Black;
-                else                                pixels[y_index * 800 + x_index + i].color = sf::Color::White;
+                if ((size_t) int_cur_dot[i] < MAX_DOT_INDEX)    pixels[y_index * 800 + x_index + i].color = sf::Color::Black;
+                else                                            pixels[y_index * 800 + x_index + i].color = sf::Color(255 - (char) int_cur_dot[i],
+                                                                                                                     (char) int_cur_dot[i] % 2 * 64,
+                                                                                                                     (char) int_cur_dot[i]);
             }
 
         }
@@ -91,7 +100,7 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
 
     #ifdef MEASURE
     unsigned long long end = __rdtsc();
-    printf("%llu\n", end - start);
+    //fprintf(fn, "%llu\n", end - start);
     #endif
 
 }

@@ -2,6 +2,8 @@ CFLAGS=-D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Waggressive-loop-
 
 SIMD_FLAGS = -mavx -mavx2
 
+OPT=-O3
+
 COMP=g++
 
 LIB_SRC=draw_func.cpp
@@ -9,10 +11,10 @@ LIB_OBJ=draw_func.o
 SFML=-lsfml-graphics -lsfml-window -lsfml-system
 
 %.o : %.cpp
-	$(COMP) $(CFLAGS) $(SIMD_FLAGS) -O3 -c $< -o $@
+	$(COMP) $(CFLAGS) $(SIMD_FLAGS) $(OPT) -c $< -o $@
 
 %.out : %.o
-	$(COMP) $(CFLAGS) $(SIMD_FLAGS) -O3 $< $(LIB_OBJ) -o $@ $(SFML)
+	$(COMP) $(CFLAGS) $(SIMD_FLAGS) $(OPT) $< $(LIB_OBJ) -o $@ $(SFML)
 
 run:
 	LIBGL_ALWAYS_INDIRECT=1 ./no_sse.out
