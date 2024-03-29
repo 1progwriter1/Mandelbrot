@@ -50,6 +50,8 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data, FILE *fn) {
     float dy = data->dy * data->scale * data->scale_ratio;
     float dx = data->dx * data->scale;
 
+    __m256 set_1;
+
     for (unsigned int y_index = 0; y_index < 600; y_index++) {
 
         float x_0 = (-((float) data->width) / 2) * dx + data->offset_x * data->scale;
@@ -77,7 +79,7 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data, FILE *fn) {
                 int mask = _mm256_movemask_ps(is_inside);
                 if (!mask) break;
 
-                cur_dot_index = _mm256_add_epi32(cur_dot_index, _mm256_cvtps_epi32(is_inside));
+                cur_dot_index = _mm256_add_epi32(cur_dot_index, _mm256_cvtps_epi32(_mm256_and_ps(is_inside, _mm256_set1_ps(1.f))));
 
                 __m256 xy = _mm256_mul_ps(X, Y);
                 X = _mm256_add_ps(_mm256_sub_ps(x2, y2), X0);
@@ -89,9 +91,9 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data, FILE *fn) {
             for (unsigned int i = 0; i < 8; i++) {
                 size_t index = y_index * 800 + x_index + i;
                 pixels[index].position = sf::Vector2f((float) (x_index + i), (float) y_index);
-                if ((size_t) int_cur_dot[i] < MAX_DOT_INDEX)    pixels[y_index * 800 + x_index + i].color = sf::Color::Black;
+                if ((size_t) int_cur_dot[i] >= MAX_DOT_INDEX)   pixels[y_index * 800 + x_index + i].color = sf::Color::Black;
                 else                                            pixels[y_index * 800 + x_index + i].color = sf::Color(255 - (char) int_cur_dot[i],
-                                                                                                                     (char) int_cur_dot[i] % 2 * 64,
+                                                                                                                     (char) int_cur_dot[i] % 8 * 32,
                                                                                                                      (char) int_cur_dot[i]);
             }
 
@@ -100,7 +102,7 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data, FILE *fn) {
 
     #ifdef MEASURE
     unsigned long long end = __rdtsc();
-    //fprintf(fn, "%llu\n", end - start);
+    fprintf(fn, "%llu\n", end - start);
     #endif
 
 }
