@@ -3,13 +3,17 @@
 #include "mandelbrot_data.h"
 #include "draw_func.h"
 #include <assert.h>
+#include <immintrin.h>
 
-static void SetPixels(sf::VertexArray &pixels, WindowData *data);
+static void SetPixels(sf::VertexArray &pixels, WindowData *data, FILE *fn);
 
 int main() {
 
     WindowData data = {};
     SetWindowData(&data);
+
+    FILE *fn = fopen(NO_AVX_FILE, "w");
+    if (!fn)    return 1;
 
     sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Mandelbrot");
     sf::VertexArray pixels(sf::Points, SCREEN_WIDTH * SCREEN_HEIGHT);
@@ -19,19 +23,26 @@ int main() {
         ProceedKeyStrokes(window, &data);
         if (!window.isOpen())   break;
 
-        SetPixels(pixels, &data);
+        SetPixels(pixels, &data, fn);
 
         window.clear(sf::Color::Black);
         window.draw(pixels);
         window.display();
     }
 
+    fclose(fn);
+
     return 0;
 }
 
-static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
+static void SetPixels(sf::VertexArray &pixels, WindowData *data, FILE *fn) {
 
     assert(data);
+
+    #ifdef MEASURE
+    assert(fn);
+    unsigned long long start = __rdtsc();
+    #endif
 
     float dy = data->dy * data->scale * data->scale_ratio;
     float dx = data->dx * data->scale;
@@ -69,5 +80,10 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
             else            pixels[index].color = sf::Color::White;
         }
     }
+
+    #ifdef MEASURE
+    unsigned long long end = __rdtsc();
+    fprintf(fn, "%llu\n", end - start);
+    #endif
 
 }

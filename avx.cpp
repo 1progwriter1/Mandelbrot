@@ -37,6 +37,10 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
 
     assert(data);
 
+    #ifdef MEASURE
+    unsigned long long start = __rdtsc();
+    #endif
+
     float dy = data->dy * data->scale * data->scale_ratio;
     float dx = data->dx * data->scale;
 
@@ -84,5 +88,10 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
 
         }
     }
+
+    #ifdef MEASURE
+    unsigned long long end = __rdtsc();
+    printf("%llu\n", end - start);
+    #endif
 
 }

@@ -1,6 +1,12 @@
 #ifndef MANDELBROT_DATA
 #define MANDELBROT_DATA
 
+#define MEASURE
+
+#define NO_AVX_FILE     "time_no_avx.txt"
+#define NO_AVX_8_FILE   "time_no_avx_8.txt"
+#define AVX_FILE        "time_avx.txt"
+
 #include <stdio.h>
 #include <SFML/Graphics.hpp>
 
