@@ -33,13 +33,23 @@ void ProceedKeyStrokes(sf::RenderWindow &window, WindowData *data) {
 
             if (event.type == sf::Event::KeyPressed) {
                 if (event.key.code == sf::Keyboard::Escape) window.close();
-                if (event.key.code == sf::Keyboard::Left)   data->offset_x += data->dx * 10.f;
-                if (event.key.code == sf::Keyboard::Right)  data->offset_x -= data->dx * 10.f;
-                if (event.key.code == sf::Keyboard::Up)     data->offset_y += data->dy * 10.f;
-                if (event.key.code == sf::Keyboard::Down)   data->offset_y -= data->dy * 10.f;
+                if (event.key.code == sf::Keyboard::Left)   data->offset_x += data->dx * (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) ? 100.f : 10.f);
+                if (event.key.code == sf::Keyboard::Right)  data->offset_x -= data->dx * (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) ? 100.f : 10.f);
+                if (event.key.code == sf::Keyboard::Up)     data->offset_y += data->dy * (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) ? 100.f : 10.f);
+                if (event.key.code == sf::Keyboard::Down)   data->offset_y -= data->dy * (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) ? 100.f : 10.f);
 
-                if (event.key.code == sf::Keyboard::Z)      if (data->scale > data->dx * 10.f)  data->scale    -= data->dx * 10.f;
-                if (event.key.code == sf::Keyboard::A)                                          data->scale    += data->dx * 10.f;
+                if (event.key.code == sf::Keyboard::Z) {
+                    if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift))
+                        data->scale -= data->dx * ((data->scale > data->dx * 100.f) ? 100.f : 0);
+                    else
+                        data->scale -= data->dx * ((data->scale > data->dx *  10.f) ?  10.f : 0);
+                }
+                if (event.key.code == sf::Keyboard::A) {
+                    if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift))
+                        data->scale += data->dx * ((data->scale > data->dx * 100.f) ? 100.f : 0);
+                    else
+                        data->scale += data->dx * ((data->scale > data->dx *  10.f) ?  10.f : 0);
+                }
             }
     }
 }

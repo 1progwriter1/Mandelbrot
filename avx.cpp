@@ -59,8 +59,6 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
     float dy = data->dy * data->scale * data->scale_ratio;
     float dx = data->dx * data->scale;
 
-    __m256 set_1;
-
     for (unsigned int y_index = 0; y_index < data->height; y_index++) {
 
         float x_0 = (-((float) data->width) / 2) * dx + data->offset_x * data->scale;
