@@ -48,5 +48,6 @@ struct WindowData {
  * TODO измерять работу всей проги
  * TODO zoom using shift
  * TODO zoom from center
+ * TODO incorrect image created in 2nd edition
  * ! -O2 for no_avx_8.cpp instead of -O3
  */
