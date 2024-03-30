@@ -16,6 +16,7 @@ int main() {
 
     WindowData data = {};
     SetWindowData(&data);
+
     sf::VertexArray pixels(sf::Points, data.width * data.height);
 
    #ifndef MEASURE

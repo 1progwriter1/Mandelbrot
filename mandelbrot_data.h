@@ -40,13 +40,13 @@ struct WindowData {
 
 
 /**
- * TODO: all tips below
- * * условная компиляция
- * * учесть рисование при расчете времени
- * * godbolt
- * * why simd with -O3
- * * погрешность
- * * измерять работу всей проги
- * * zoom using shift
+ * TODO условная компиляция
+ * TODO учесть рисование при расчете времени
+ * TODO godbolt
+ * TODO why simd with -O3
+ * TODO погрешность
+ * TODO измерять работу всей проги
+ * TODO zoom using shift
+ * TODO zoom from center
  * ! -O2 for no_avx_8.cpp instead of -O3
  */

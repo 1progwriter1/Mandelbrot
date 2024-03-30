@@ -6,88 +6,105 @@
 #include <immintrin.h>
 
 
-static void SetPixels(sf::VertexArray &pixels, WindowData *data, FILE *fn);
+static void SetPixels(sf::VertexArray &pixels, WindowData *data);
+static void CalculateDots(size_t *dots_indexes, float x0, float y0, float dx, float dy);
 
 int main() {
 
     WindowData data = {};
     SetWindowData(&data);
 
-    FILE *fn = fopen(NO_AVX_8_FILE, "w");
-    if (!fn)    return 1;
+    sf::VertexArray pixels(sf::Points, data.width * data.height);
 
-    sf::RenderWindow window(sf::VideoMode(800, 600), "Mandelbrot");
-    sf::VertexArray pixels(sf::Points, 800 * 600);
+    #ifndef MEASURE
+    sf::RenderWindow window(sf::VideoMode(data.width, data.height), "Mandelbrot");
 
     while (window.isOpen()) {
 
         ProceedKeyStrokes(window, &data);
 
-        SetPixels(pixels, &data, fn);
+        SetPixels(pixels, &data);
 
         window.clear(sf::Color::Black);
         window.draw(pixels);
         window.display();
     }
+    #else
+    FILE *fn = fopen(NO_AVX_8_FILE, "w");
+    if (!fn)    return 1;
 
+    for (size_t i = 0; i < NUMBER_OF_MEASUREMENTS; i++) {
+
+        unsigned long long start = __rdtsc();
+
+        for (size_t j = 0; j < NUMBER_OF_SCREENS; j++)
+            SetPixels(pixels, &data);
+
+        unsigned long long end = __rdtsc();
+        fprintf(fn, "%llu\n", end - start);
+    }
     fclose(fn);
+    #endif
 
     return 0;
 }
 
-static void SetPixels(sf::VertexArray &pixels, WindowData *data, FILE *fn) {
+static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
 
     assert(data);
-
-    #ifdef MEASURE
-    assert(fn);
-    unsigned long long start = __rdtsc();
-    #endif
 
     float dy = data->dy * data->scale * data->scale_ratio;
     float dx = data->dx * data->scale;
 
-    for (unsigned int y_index = 0; y_index < 600; y_index++) {
+    for (unsigned int y_index = 0; y_index < data->height; y_index++) {
 
-        float x_0 = (-((float) data->width) / 2) * dx + data->offset_x * data->scale;
-        float y_0 = (((float) y_index) - (float) data->height / 2) * dy + data->offset_y * data->scale * data->scale_ratio;
+        float x0 = (-((float) data->width) / 2) * dx + data->offset_x * data->scale;
+        float y0 = (((float) y_index) - (float) data->height / 2) * dy + data->offset_y * data->scale * data->scale_ratio;
 
-        for (unsigned int x_index = 0; x_index < 800; x_index += 8, x_0 += dx * 8) {
+        for (unsigned int x_index = 0; x_index < data->width; x_index += 8, x0 += dx * 8) {
 
-            float X0[8] = {x_0, x_0 + dx, x_0 + dx * 2, x_0 + dx * 3, x_0 + dx * 4, x_0 + dx * 5, x_0 + dx * 6, x_0 + dx * 7};
-            float Y0[8] = {y_0, y_0 + dy, y_0 + dy * 2, y_0 + dy * 3, y_0 + dy * 4, y_0 + dy * 5, y_0 + dy * 6, y_0 + dy * 7};
+            size_t dots_indexes[8] = {};
+            CalculateDots(dots_indexes, x0, y0, dx, dy);
 
-            float X[8] = {};    for (size_t i = 0; i < 8; i++) X[i] = X0[i];
-            float Y[8] = {};    for (size_t i = 0; i < 8; i++) Y[i] = Y0[i];
-
-            bool is_inside[8] = {true, true, true, true, true, true, true, true};
-            for (size_t i = 0; i < MAX_DOT_INDEX; i++) {
-
-                float x2[8] = {};   for (size_t j = 0; j < 8; j++) x2[j] =  X[j] * X[j];
-                float y2[8] = {};   for (size_t j = 0; j < 8; j++) y2[j] =  Y[j] * Y[j];
-                float xy[8] = {};   for (size_t j = 0; j < 8; j++) xy[j] =  X[j] * Y[j];
-                float r2[8] = {};   for (size_t j = 0; j < 8; j++) r2[j] = x2[j] + y2[j];
-
-                for (size_t j = 0; j < 8; j++) {
-                    if (!is_inside[j]) continue;
-                    is_inside[j] = r2[j] <= MAX_RADIUS_SQUARE;
-                }
-
-                for (size_t j = 0; j < 8; j++)  X[j] = x2[j] - y2[j] + X0[j];
-                for (size_t j = 0; j < 8; j++)  Y[j] = xy[j] + xy[j] + Y0[j];
-            }
-
+            #ifndef MEASURE
             for (unsigned int i = 0; i < 8; i++) {
                 size_t index = y_index * 800 + x_index + i;
                 pixels[index].position = sf::Vector2f((float) (x_index + i),(float) y_index);
-                if (is_inside[i])   pixels[index].color = sf::Color::Black;
-                else                pixels[index].color = sf::Color::White;
+                if (dots_indexes[i] >= MAX_DOT_INDEX)   pixels[index].color = sf::Color::Black;
+                else                                    pixels[index].color = sf::Color(255 - (char) dots_indexes[i],
+                                                                                       (char) dots_indexes[i] % 8 * 32,
+                                                                                       (char) dots_indexes[i]);;
             }
+            #endif
         }
     }
+}
 
-    #ifdef MEASURE
-    unsigned long long end = __rdtsc();
-    fprintf(fn, "%llu\n", end - start);
-    #endif
+static void CalculateDots(size_t *dots_indexes, float x0, float y0, float dx, float dy) {
+
+    assert(dots_indexes);
+
+    float X0[8] = {x0, x0 + dx, x0 + dx * 2, x0 + dx * 3, x0 + dx * 4, x0 + dx * 5, x0 + dx * 6, x0 + dx * 7};
+    float Y0[8] = {y0, y0 + dy, y0 + dy * 2, y0 + dy * 3, y0 + dy * 4, y0 + dy * 5, y0 + dy * 6, y0 + dy * 7};
+
+    float X[8] = {};    for (size_t i = 0; i < 8; i++) X[i] = X0[i];
+    float Y[8] = {};    for (size_t i = 0; i < 8; i++) Y[i] = Y0[i];
+
+    int mask_is_inside = 0;
+    for (size_t i = 0; i < MAX_DOT_INDEX; i++) {
+
+        float x2[8] = {};   for (size_t j = 0; j < 8; j++) x2[j] =  X[j] * X[j];
+        float y2[8] = {};   for (size_t j = 0; j < 8; j++) y2[j] =  Y[j] * Y[j];
+        float xy[8] = {};   for (size_t j = 0; j < 8; j++) xy[j] =  X[j] * Y[j];
+        float r2[8] = {};   for (size_t j = 0; j < 8; j++) r2[j] = x2[j] + y2[j];
+
+        mask_is_inside = 0;
+        for (size_t j = 0; j < 8; j++)  mask_is_inside |= (r2[j] < MAX_RADIUS_SQUARE) << j;
+        if (!mask_is_inside)  break;
+
+        for (size_t j = 0; j < 8; j++)  dots_indexes[j] += (size_t) (mask_is_inside >> j) & 1;
+
+        for (size_t j = 0; j < 8; j++)  X[j] = x2[j] - y2[j] + X0[j];
+        for (size_t j = 0; j < 8; j++)  Y[j] = xy[j] + xy[j] + Y0[j];
+    }
 }
