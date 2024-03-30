@@ -55,17 +55,17 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
     float dy = data->dy * data->scale * data->scale_ratio;
     float dx = data->dx * data->scale;
 
-    for (unsigned int y_index = 0; y_index < data->height; y_index++) {
+    for (unsigned int y_index = 0; y_index < SCREEN_WIDTH; y_index++) {
 
-        float x0 = (-((float) data->width) / 2) * dx + data->offset_x * data->scale;
-        float y0 = (((float) y_index) - (float) data->height / 2) * dy + data->offset_y * data->scale * data->scale_ratio;
+        float x0 = (-((float) SCREEN_WIDTH) / 2) * dx + data->offset_x * data->scale;
+        float y0 = (((float) y_index) - (float) SCREEN_HEIGHT / 2) * dy + data->offset_y * data->scale * data->scale_ratio;
 
-        for (unsigned int x_index = 0; x_index < data->width; x_index++, x0 += dx) {
+        for (unsigned int x_index = 0; x_index < SCREEN_WIDTH; x_index++, x0 += dx) {
 
             size_t dot_index = CalculateDot(x0, y0);
 
             #ifndef MEASURE
-            size_t index = y_index * data->width + x_index;
+            size_t index = y_index * SCREEN_WIDTH + x_index;
             pixels[index].position = sf::Vector2f((float) x_index, (float) y_index);
             if (dot_index >= MAX_DOT_INDEX) pixels[index].color = sf::Color::Black;
             else                            pixels[index].color = sf::Color(255 - (char) dot_index,

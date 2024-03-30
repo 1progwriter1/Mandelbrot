@@ -14,10 +14,10 @@ int main() {
     WindowData data = {};
     SetWindowData(&data);
 
-    sf::VertexArray pixels(sf::Points, data.width * data.height);
+    sf::VertexArray pixels(sf::Points, SCREEN_WIDTH * SCREEN_HEIGHT);
 
     #ifndef MEASURE
-    sf::RenderWindow window(sf::VideoMode(data.width, data.height), "Mandelbrot");
+    sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Mandelbrot");
 
     while (window.isOpen()) {
 
@@ -56,12 +56,12 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
     float dy = data->dy * data->scale * data->scale_ratio;
     float dx = data->dx * data->scale;
 
-    for (unsigned int y_index = 0; y_index < data->height; y_index++) {
+    for (unsigned int y_index = 0; y_index < SCREEN_HEIGHT; y_index++) {
 
-        float x0 = (-((float) data->width) / 2) * dx + data->offset_x * data->scale;
-        float y0 = (((float) y_index) - (float) data->height / 2) * dy + data->offset_y * data->scale * data->scale_ratio;
+        float x0 = (-((float) SCREEN_WIDTH) / 2) * dx + data->offset_x * data->scale;
+        float y0 = (((float) y_index) - (float) SCREEN_HEIGHT / 2) * dy + data->offset_y * data->scale * data->scale_ratio;
 
-        for (unsigned int x_index = 0; x_index < data->width; x_index += 8, x0 += dx * 8) {
+        for (unsigned int x_index = 0; x_index < SCREEN_WIDTH; x_index += 8, x0 += dx * 8) {
 
             size_t dots_indexes[8] = {};
             CalculateDots(dots_indexes, x0, y0, dx, dy);

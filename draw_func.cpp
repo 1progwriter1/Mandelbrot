@@ -7,9 +7,6 @@ void SetWindowData(WindowData *data) {
 
     assert(data);
 
-    data->height    = SCREEN_HEIGHT;
-    data->width     = SCREEN_WIDTH;
-
     data->dx        = STEP_X;
     data->dy        = STEP_Y;
 
@@ -17,7 +14,7 @@ void SetWindowData(WindowData *data) {
     data->offset_x  = 0.f;
     data->offset_y  = 0.f;
 
-    data->scale_ratio = (float) data->height / (float) data->width;
+    data->scale_ratio = (float) SCREEN_HEIGHT / (float) SCREEN_WIDTH;
 
 }
 
@@ -33,23 +30,17 @@ void ProceedKeyStrokes(sf::RenderWindow &window, WindowData *data) {
 
             if (event.type == sf::Event::KeyPressed) {
                 if (event.key.code == sf::Keyboard::Escape) window.close();
-                if (event.key.code == sf::Keyboard::Left)   data->offset_x += data->dx * (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) ? 100.f : 10.f);
-                if (event.key.code == sf::Keyboard::Right)  data->offset_x -= data->dx * (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) ? 100.f : 10.f);
-                if (event.key.code == sf::Keyboard::Up)     data->offset_y += data->dy * (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) ? 100.f : 10.f);
-                if (event.key.code == sf::Keyboard::Down)   data->offset_y -= data->dy * (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) ? 100.f : 10.f);
+                if (event.key.code == sf::Keyboard::Left)
+                    data->offset_x += data->dx * data->scale * (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) ? 100.f : 10.f);
+                if (event.key.code == sf::Keyboard::Right)
+                    data->offset_x -= data->dx * data->scale * (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) ? 100.f : 10.f);
+                if (event.key.code == sf::Keyboard::Up)
+                    data->offset_y += data->dy * data->scale * (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) ? 100.f : 10.f);
+                if (event.key.code == sf::Keyboard::Down)
+                    data->offset_y -= data->dy * data->scale * (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) ? 100.f : 10.f);
 
-                if (event.key.code == sf::Keyboard::Z) {
-                    if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift))
-                        data->scale -= data->dx * ((data->scale > data->dx * 100.f) ? 100.f : 0);
-                    else
-                        data->scale -= data->dx * ((data->scale > data->dx *  10.f) ?  10.f : 0);
-                }
-                if (event.key.code == sf::Keyboard::A) {
-                    if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift))
-                        data->scale += data->dx * ((data->scale > data->dx * 100.f) ? 100.f : 0);
-                    else
-                        data->scale += data->dx * ((data->scale > data->dx *  10.f) ?  10.f : 0);
-                }
+                if (event.key.code == sf::Keyboard::Z)  data->scale /= sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) ? BIG_ZOOM : DEFAULT_ZOOM;
+                if (event.key.code == sf::Keyboard::A)  data->scale *= sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) ? BIG_ZOOM : DEFAULT_ZOOM;
             }
     }
 }

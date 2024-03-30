@@ -10,6 +10,9 @@
 #include <stdio.h>
 #include <SFML/Graphics.hpp>
 
+const float DEFAULT_ZOOM = 12/10.f;
+const float BIG_ZOOM     = 20/10.f;
+
 const size_t NUMBER_OF_MEASUREMENTS = 1000;
 const size_t NUMBER_OF_SCREENS      = 100;
 
@@ -23,9 +26,6 @@ const size_t MAX_DOT_INDEX = 256;
 const float MAX_RADIUS_SQUARE = 100.f;
 
 struct WindowData {
-
-    unsigned int width;
-    unsigned int height;
 
     float dx;
     float dy;
@@ -44,10 +44,9 @@ struct WindowData {
  * * учесть рисование при расчете времени
  * TODO godbolt
  * TODO why simd with -O3
- * TODO погрешность
- * TODO измерять работу всей проги
- * TODO zoom using shift
+ * * погрешность
+ * * измерять работу всей проги
+ * * zoom using shift
  * TODO zoom from center
  * TODO incorrect image created in 2nd edition
- * ! -O2 for no_avx_8.cpp instead of -O3
  */
