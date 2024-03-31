@@ -1,7 +1,7 @@
 #ifndef MANDELBROT_DATA
 #define MANDELBROT_DATA
 
-// #define MEASURE
+#define MEASURE
 
 #define NO_AVX_FILE     "time_no_avx.txt"
 #define NO_AVX_8_FILE   "time_no_avx_8.txt"
@@ -13,8 +13,8 @@
 const float DEFAULT_ZOOM = 12/10.f;
 const float BIG_ZOOM     = 20/10.f;
 
-const size_t NUMBER_OF_MEASUREMENTS = 1000;
-const size_t NUMBER_OF_SCREENS      = 100;
+const size_t NUMBER_OF_MEASUREMENTS = 30;
+const size_t NUMBER_OF_SCREENS      = (size_t) 1e7;
 
 const unsigned int SCREEN_WIDTH  = 800;
 const unsigned int SCREEN_HEIGHT = 600;
@@ -47,6 +47,6 @@ struct WindowData {
  * * погрешность
  * * измерять работу всей проги
  * * zoom using shift
- * TODO zoom from center
+ * * zoom from center
  * TODO incorrect image created in 2nd edition
  */
