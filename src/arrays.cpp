@@ -5,15 +5,15 @@
 #include <assert.h>
 #include <immintrin.h>
 
-
 static void SetPixels(sf::VertexArray &pixels, WindowData *data);
 static void CalculateDots(size_t *dots_indexes, float x0, float y0, float dx, float dy);
 
-int main() {
+int main(const int argc, const char *argv[]) {
+
+    assert(argv);
 
     WindowData data = {};
     SetWindowData(&data);
-
     sf::VertexArray pixels(sf::Points, SCREEN_WIDTH * SCREEN_HEIGHT);
 
     #ifndef MEASURE
@@ -30,8 +30,10 @@ int main() {
         window.display();
     }
     #else
-    FILE *fn = fopen(NO_AVX_8_FILE, "w");
-    if (!fn)    return 1;
+    FILE *time  = fopen(ARRAYS_TIME, "w");
+    if (!time)  return FILE_OPEN_ERROR;
+    FILE *ticks = fopen(ARRAYS_TICKS, "w");
+    if (!ticks) {fclose(time); return FILE_OPEN_ERROR}
 
     for (size_t i = 0; i < NUMBER_OF_MEASUREMENTS; i++) {
 
@@ -46,7 +48,7 @@ int main() {
     fclose(fn);
     #endif
 
-    return 0;
+    return SUCCESS;
 }
 
 static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
@@ -107,4 +109,37 @@ static void CalculateDots(size_t *dots_indexes, float x0, float y0, float dx, fl
         for (size_t j = 0; j < 8; j++)  X[j] = x2[j] - y2[j] + X0[j];
         for (size_t j = 0; j < 8; j++)  Y[j] = xy[j] + xy[j] + Y0[j];
     }
+}
+
+int MeasureProgram(sf::VertexArray &pixels, WindowData *data) {
+
+    assert(data);
+
+    FILE *time  = fopen(ARRAYS_TIME, "w");
+    if (!time)  return FILE_OPEN_ERROR;
+
+    FILE *ticks = fopen(ARRAYS_TICKS, "w");
+    if (!ticks) {
+        fclose(time);
+        return FILE_OPEN_ERROR;
+    }
+
+    for (size_t i = 0; i < NUMBER_OF_MEASUREMENTS; i++) {
+
+        time_t time_start = clock();
+        unsigned long long start = __rdtsc();
+
+        for (size_t j = 0; j < NUMBER_OF_SCREENS; j++)
+            SetPixels(pixels, data);
+
+        unsigned long long end = __rdtsc();
+        time_t time_end = clock();
+
+        fprintf(ticks, "%llu\n", end - start);
+        fprintf(time, "f\n", (double) (end - start) / CLOCKS_PER_SEC);
+    }
+
+    fclose(ticks);
+    fclose(time);
+
 }

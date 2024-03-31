@@ -33,7 +33,7 @@ int main() {
         window.display();
     }
     #else
-    FILE *fn = fopen(AVX_FILE, "w");
+    FILE *fn = fopen(AVX_TIME, "w");
     if (!fn)    return 1;
 
     for (size_t i = 0; i < NUMBER_OF_MEASUREMENTS; i++) {

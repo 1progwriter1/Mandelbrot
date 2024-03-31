@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <SFML/Graphics.hpp>
-#include "draw_func.h"
+#include "../headers/draw_func.h"
 #include <assert.h>
+#include <string.h>
+#include <immintrin.h>
+#include "../headers/mandelbrot_data.h"
 
 void SetWindowData(WindowData *data) {
 
@@ -43,4 +46,56 @@ void ProceedKeyStrokes(sf::RenderWindow &window, WindowData *data) {
                 if (event.key.code == sf::Keyboard::A)  data->scale *= sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) ? BIG_ZOOM : DEFAULT_ZOOM;
             }
     }
+}
+
+bool IfMeasure(const int argc, const char *argv[]) {
+
+    assert(argv);
+
+    if (argc < 2)
+        return false;
+
+    return strncmp(argv[1], "measure", sizeof("measure")) == 0;
+}
+
+int MeasureProgram(WindowData *data, const char *time_file, const char *ticks_file, void (*SetPixels)(sf::VertexArray &, WindowData *, bool)) {
+
+    assert(data);
+    assert(SetPixels);
+    assert(time_file);
+    assert(ticks_file);
+
+    FILE *time  = fopen(time_file, "w");
+    if (!time)  return FILE_OPEN_ERROR;
+
+    FILE *ticks = fopen(ticks_file, "w");
+    if (!ticks) {
+        fclose(time);
+        return FILE_OPEN_ERROR;
+    }
+
+    fprintf(stderr, "files opened\n");
+
+    sf::VertexArray pixels = {};
+
+    for (size_t i = 0; i < NUMBER_OF_MEASUREMENTS; i++) {
+
+        fprintf(stderr, "cycle n%lu\n", i);
+        time_t time_start = clock();
+        unsigned long long start = __rdtsc();
+
+        for (size_t j = 0; j < NUMBER_OF_SCREENS; j++)
+            SetPixels(pixels, data, true);
+
+        unsigned long long end = __rdtsc();
+        time_t time_end = clock();
+
+        fprintf(ticks, "%llu\n", end - start);
+        fprintf(time, "%f\n", (double) (time_end - time_start) / CLOCKS_PER_SEC);
+    }
+
+    fclose(ticks);
+    fclose(time);
+
+    return SUCCESS;
 }

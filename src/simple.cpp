@@ -1,60 +1,55 @@
 #include <SFML/Graphics.hpp>
 #include <stdio.h>
-#include "mandelbrot_data.h"
-#include "draw_func.h"
+#include "../headers/mandelbrot_data.h"
+#include "../headers/draw_func.h"
 #include <assert.h>
 #include <immintrin.h>
 
-static void SetPixels(sf::VertexArray &pixels, WindowData *data);
+static void SetPixels(sf::VertexArray &pixels, WindowData *data, bool if_measure);
 static size_t CalculateDot(float x0, float y0);
 
-int main() {
+int main(const int argc, const char *argv[]) {
 
     WindowData data = {};
     SetWindowData(&data);
-
     sf::VertexArray pixels(sf::Points, SCREEN_WIDTH * SCREEN_HEIGHT);
 
     #ifndef MEASURE
     sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Mandelbrot");
+
     while (window.isOpen()) {
 
         ProceedKeyStrokes(window, &data);
-        if (!window.isOpen())   break;
 
-        SetPixels(pixels, &data);
+        SetPixels(pixels, &data, false);
 
         window.clear(sf::Color::Black);
         window.draw(pixels);
         window.display();
     }
     #else
-    FILE *fn = fopen(NO_AVX_FILE, "w");
-    if (!fn)    return 1;
-
+    FILE *time  = fopen(ARRAYS_TIME, "w");
+    if (!time)  return FILE_OPEN_ERROR;
+    FILE *ticks = fopen(ARRAYS_TICKS, "w");
+    if (!ticks) {fclose(time); return FILE_OPEN_ERROR}
 
     for (size_t i = 0; i < NUMBER_OF_MEASUREMENTS; i++) {
 
-        time_t start_time = clock();
         unsigned long long start = __rdtsc();
 
         for (size_t j = 0; j < NUMBER_OF_SCREENS; j++)
             SetPixels(pixels, &data);
 
         unsigned long long end = __rdtsc();
-        time_t end_time = clock();
-
         fprintf(fn, "%llu\n", end - start);
     }
-
-
     fclose(fn);
     #endif
 
-    return 0;
+    return SUCCESS;
 }
 
-static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
+static void SetPixels(sf::VertexArray &pixels, WindowData *data, bool if_measure) {
 
     assert(data);
 
@@ -70,14 +65,14 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
 
             size_t dot_index = CalculateDot(x0, y0);
 
-            #ifndef MEASURE
+            if (if_measure) continue;
+
             size_t index = y_index * SCREEN_WIDTH + x_index;
             pixels[index].position = sf::Vector2f((float) x_index, (float) y_index);
             if (dot_index >= MAX_DOT_INDEX) pixels[index].color = sf::Color::Black;
             else                            pixels[index].color = sf::Color(255 - (char) dot_index,
                                                                            (char) dot_index % 8 * 32,
                                                                            (char) dot_index);
-            #endif
         }
     }
 

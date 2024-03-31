@@ -1,8 +1,6 @@
 #ifndef MANDELBROT_DATA
 #define MANDELBROT_DATA
 
-#define MEASURE
-
 #define AVX_TIME        "Results/avx_time.txt"
 #define ARRAYS_TIME     "Results/arrays_time.txt"
 #define SIMPLE_TIME     "Results/simple_time.txt"
@@ -13,11 +11,17 @@
 #include <stdio.h>
 #include <SFML/Graphics.hpp>
 
+enum ExitCodes {
+    SUCCESS = 0,
+    ERROR = 1,
+    FILE_OPEN_ERROR = 2,
+};
+
 const float DEFAULT_ZOOM = 12/10.f;
 const float BIG_ZOOM     = 20/10.f;
 
-const size_t NUMBER_OF_MEASUREMENTS = (size_t) 1e3;
-const size_t NUMBER_OF_SCREENS      = (size_t) 1e3;
+const size_t NUMBER_OF_MEASUREMENTS = 3;
+const size_t NUMBER_OF_SCREENS      = 100;
 
 const unsigned int SCREEN_WIDTH  = 800;
 const unsigned int SCREEN_HEIGHT = 600;
