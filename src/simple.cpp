@@ -32,16 +32,22 @@ int main() {
     FILE *fn = fopen(NO_AVX_FILE, "w");
     if (!fn)    return 1;
 
+
     for (size_t i = 0; i < NUMBER_OF_MEASUREMENTS; i++) {
 
+        time_t start_time = clock();
         unsigned long long start = __rdtsc();
 
         for (size_t j = 0; j < NUMBER_OF_SCREENS; j++)
             SetPixels(pixels, &data);
 
         unsigned long long end = __rdtsc();
+        time_t end_time = clock();
+
         fprintf(fn, "%llu\n", end - start);
     }
+
+
     fclose(fn);
     #endif
 

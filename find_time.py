@@ -2,5 +2,6 @@ with open("time_no_avx.txt") as f:
     times = [int(i) for i in f.readlines()]
 
 times.sort()
-
-print(times[len(times) // 2] / pow(10, 9))
+aver = sum(times) / len(times)
+print(aver)
+print(max(max(times) - aver, aver - min(times)) / 100)
