@@ -20,8 +20,8 @@ enum ExitCodes {
 const float DEFAULT_ZOOM = 12/10.f;
 const float BIG_ZOOM     = 20/10.f;
 
-const size_t NUMBER_OF_MEASUREMENTS = 3;
-const size_t NUMBER_OF_SCREENS      = 100;
+const size_t NUMBER_OF_MEASUREMENTS = (size_t) 1e2;
+const size_t NUMBER_OF_SCREENS      = (size_t) 1e5;
 
 const unsigned int SCREEN_WIDTH  = 800;
 const unsigned int SCREEN_HEIGHT = 600;

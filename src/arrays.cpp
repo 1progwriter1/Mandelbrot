@@ -5,8 +5,9 @@
 #include <assert.h>
 #include <immintrin.h>
 
-static void SetPixels(sf::VertexArray &pixels, WindowData *data);
+static void SetPixels(sf::VertexArray &pixels, WindowData *data, bool if_measure);
 static void CalculateDots(size_t *dots_indexes, float x0, float y0, float dx, float dy);
+static int MeasureProgram(WindowData *data, const char *time_file, const char *ticks_file);
 
 int main(const int argc, const char *argv[]) {
 
@@ -14,44 +15,30 @@ int main(const int argc, const char *argv[]) {
 
     WindowData data = {};
     SetWindowData(&data);
-    sf::VertexArray pixels(sf::Points, SCREEN_WIDTH * SCREEN_HEIGHT);
 
-    #ifndef MEASURE
-    sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Mandelbrot");
+    if (IfMeasure(argc, argv)) {
+        sf::VertexArray pixels(sf::Points, SCREEN_WIDTH * SCREEN_HEIGHT);
+        sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Mandelbrot");
 
-    while (window.isOpen()) {
+        while (window.isOpen()) {
 
-        ProceedKeyStrokes(window, &data);
+            ProceedKeyStrokes(window, &data);
 
-        SetPixels(pixels, &data);
+            SetPixels(pixels, &data, false);
 
-        window.clear(sf::Color::Black);
-        window.draw(pixels);
-        window.display();
+            window.clear(sf::Color::Black);
+            window.draw(pixels);
+            window.display();
+        }
     }
-    #else
-    FILE *time  = fopen(ARRAYS_TIME, "w");
-    if (!time)  return FILE_OPEN_ERROR;
-    FILE *ticks = fopen(ARRAYS_TICKS, "w");
-    if (!ticks) {fclose(time); return FILE_OPEN_ERROR}
-
-    for (size_t i = 0; i < NUMBER_OF_MEASUREMENTS; i++) {
-
-        unsigned long long start = __rdtsc();
-
-        for (size_t j = 0; j < NUMBER_OF_SCREENS; j++)
-            SetPixels(pixels, &data);
-
-        unsigned long long end = __rdtsc();
-        fprintf(fn, "%llu\n", end - start);
+    else {
+        return MeasureProgram(&data, ARRAYS_TIME, ARRAYS_TICKS);
     }
-    fclose(fn);
-    #endif
 
     return SUCCESS;
 }
 
-static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
+static void SetPixels(sf::VertexArray &pixels, WindowData *data, bool if_measure) {
 
     assert(data);
 
@@ -68,7 +55,8 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
             size_t dots_indexes[8] = {};
             CalculateDots(dots_indexes, x0, y0, dx, dy);
 
-            #ifndef MEASURE
+            if (if_measure) continue;
+
             for (unsigned int i = 0; i < 8; i++) {
                 size_t index = y_index * 800 + x_index + i;
                 pixels[index].position = sf::Vector2f((float) (x_index + i),(float) y_index);
@@ -77,7 +65,6 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
                                                                                        (char) dots_indexes[i] % 8 * 32,
                                                                                        (char) dots_indexes[i]);;
             }
-            #endif
         }
     }
 }
@@ -111,18 +98,22 @@ static void CalculateDots(size_t *dots_indexes, float x0, float y0, float dx, fl
     }
 }
 
-int MeasureProgram(sf::VertexArray &pixels, WindowData *data) {
+static int MeasureProgram(WindowData *data, const char *time_file, const char *ticks_file) {
 
     assert(data);
+    assert(time_file);
+    assert(ticks_file);
 
-    FILE *time  = fopen(ARRAYS_TIME, "w");
+    FILE *time  = fopen(time_file, "w");
     if (!time)  return FILE_OPEN_ERROR;
 
-    FILE *ticks = fopen(ARRAYS_TICKS, "w");
+    FILE *ticks = fopen(ticks_file, "w");
     if (!ticks) {
         fclose(time);
         return FILE_OPEN_ERROR;
     }
+
+    sf::VertexArray pixels = {};
 
     for (size_t i = 0; i < NUMBER_OF_MEASUREMENTS; i++) {
 
@@ -130,16 +121,17 @@ int MeasureProgram(sf::VertexArray &pixels, WindowData *data) {
         unsigned long long start = __rdtsc();
 
         for (size_t j = 0; j < NUMBER_OF_SCREENS; j++)
-            SetPixels(pixels, data);
+            SetPixels(pixels, data, true);
 
         unsigned long long end = __rdtsc();
         time_t time_end = clock();
 
         fprintf(ticks, "%llu\n", end - start);
-        fprintf(time, "f\n", (double) (end - start) / CLOCKS_PER_SEC);
+        fprintf(time, "%f\n", (double) (time_end - time_start) / CLOCKS_PER_SEC);
     }
 
     fclose(ticks);
     fclose(time);
 
+    return SUCCESS;
 }

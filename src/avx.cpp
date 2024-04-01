@@ -9,50 +9,40 @@
 const __m256 _76543210 = _mm256_set_ps(7.f, 6.f, 5.f, 4.f, 3.f, 2.f, 1.f, 0.f);
 const __m256 MAX_RADIUS_SQUARE_SIMD = _mm256_set1_ps(100.f);
 
-static void SetPixels(sf::VertexArray &pixels, WindowData *data);
+static int MeasureProgram(WindowData *data, const char *time_file, const char *ticks_file);
+static void SetPixels(sf::VertexArray &pixels, WindowData *data, bool if_measure);
 static __m256i CalculateDots(float x0, float y0, float dx);
 
-int main() {
+int main(const int argc, const char *argv[]) {
+
+    assert(argv);
 
     WindowData data = {};
     SetWindowData(&data);
 
-    sf::VertexArray pixels(sf::Points, SCREEN_WIDTH * SCREEN_HEIGHT);
+    if (IfMeasure(argc, argv)) {
+        sf::VertexArray pixels(sf::Points, SCREEN_WIDTH * SCREEN_HEIGHT);
+        sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Mandelbrot");
 
-   #ifndef MEASURE
-    sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Mandelbrot");
+        while (window.isOpen()) {
 
-    while (window.isOpen()) {
+            ProceedKeyStrokes(window, &data);
 
-        ProceedKeyStrokes(window, &data);
+            SetPixels(pixels, &data, false);
 
-        SetPixels(pixels, &data);
-
-        window.clear(sf::Color::Black);
-        window.draw(pixels);
-        window.display();
+            window.clear(sf::Color::Black);
+            window.draw(pixels);
+            window.display();
+        }
     }
-    #else
-    FILE *fn = fopen(AVX_TIME, "w");
-    if (!fn)    return 1;
-
-    for (size_t i = 0; i < NUMBER_OF_MEASUREMENTS; i++) {
-
-        unsigned long long start = __rdtsc();
-
-        for (size_t j = 0; j < NUMBER_OF_SCREENS; j++)
-            SetPixels(pixels, &data);
-
-        unsigned long long end = __rdtsc();
-        fprintf(fn, "%llu\n", end - start);
+    else {
+        return MeasureProgram(&data, ARRAYS_TIME, ARRAYS_TICKS);
     }
-    fclose(fn);
-    #endif
 
     return 0;
 }
 
-static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
+static void SetPixels(sf::VertexArray &pixels, WindowData *data, bool if_measure) {
 
     assert(data);
 
@@ -68,7 +58,8 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
 
             __m256i cur_dot_index = CalculateDots(x0, y0, dx);
 
-            #ifndef MEASURE
+            if (if_measure) continue;
+
             int *int_cur_dot = (int *) &cur_dot_index;
             for (unsigned int i = 0; i < 8; i++) {
                 size_t index = y_index * 800 + x_index + i;
@@ -78,8 +69,6 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data) {
                                                                                                                      (char) int_cur_dot[i] % 8 * 32,
                                                                                                                      (char) int_cur_dot[i]);
             }
-            #endif
-
         }
     }
 }
@@ -114,4 +103,42 @@ static __m256i CalculateDots(float x0, float y0, float dx) {
         }
 
         return dots_indexes;
+}
+
+static int MeasureProgram(WindowData *data, const char *time_file, const char *ticks_file) {
+
+    assert(data);
+    assert(time_file);
+    assert(ticks_file);
+
+    FILE *time  = fopen(time_file, "w");
+    if (!time)  return FILE_OPEN_ERROR;
+
+    FILE *ticks = fopen(ticks_file, "w");
+    if (!ticks) {
+        fclose(time);
+        return FILE_OPEN_ERROR;
+    }
+
+    sf::VertexArray pixels = {};
+
+    for (size_t i = 0; i < NUMBER_OF_MEASUREMENTS; i++) {
+
+        time_t time_start = clock();
+        unsigned long long start = __rdtsc();
+
+        for (size_t j = 0; j < NUMBER_OF_SCREENS; j++)
+            SetPixels(pixels, data, true);
+
+        unsigned long long end = __rdtsc();
+        time_t time_end = clock();
+
+        fprintf(ticks, "%llu\n", end - start);
+        fprintf(time, "%f\n", (double) (time_end - time_start) / CLOCKS_PER_SEC);
+    }
+
+    fclose(ticks);
+    fclose(time);
+
+    return SUCCESS;
 }
