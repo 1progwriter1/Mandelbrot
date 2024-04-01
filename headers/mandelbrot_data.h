@@ -8,6 +8,8 @@
 #define ARRAYS_TICKS    "Results/arrays_ticks.txt"
 #define AVX_TICKS       "Results/avx_ticks.txt"
 
+#define FONT_FILE       "Arial Black.ttf"
+
 #include <stdio.h>
 #include <SFML/Graphics.hpp>
 
@@ -31,6 +33,8 @@ const float STEP_Y = 1/150.f;
 
 const size_t MAX_DOT_INDEX = 256;
 const float MAX_RADIUS_SQUARE = 100.f;
+
+const size_t FPS_BUFFER_LEN = 64;
 
 struct WindowData {
 

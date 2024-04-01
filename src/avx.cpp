@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <emmintrin.h>
 #include <immintrin.h>
-#include "mandelbrot_data.h"
-#include "draw_func.h"
+#include "../headers/mandelbrot_data.h"
+#include "../headers/draw_func.h"
 #include <assert.h>
 
 const __m256 _76543210 = _mm256_set_ps(7.f, 6.f, 5.f, 4.f, 3.f, 2.f, 1.f, 0.f);
@@ -20,7 +20,7 @@ int main(const int argc, const char *argv[]) {
     WindowData data = {};
     SetWindowData(&data);
 
-    if (IfMeasure(argc, argv)) {
+    if (!IfMeasure(argc, argv)) {
         sf::VertexArray pixels(sf::Points, SCREEN_WIDTH * SCREEN_HEIGHT);
         sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Mandelbrot");
 
@@ -30,9 +30,7 @@ int main(const int argc, const char *argv[]) {
 
             SetPixels(pixels, &data, false);
 
-            window.clear(sf::Color::Black);
-            window.draw(pixels);
-            window.display();
+            DrawWindow(window, pixels);
         }
     }
     else {

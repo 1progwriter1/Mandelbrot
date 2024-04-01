@@ -16,7 +16,8 @@ int main(const int argc, const char *argv[]) {
     WindowData data = {};
     SetWindowData(&data);
 
-    if (IfMeasure(argc, argv)) {
+    if (!IfMeasure(argc, argv)) {
+
         sf::VertexArray pixels(sf::Points, SCREEN_WIDTH * SCREEN_HEIGHT);
         sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Mandelbrot");
 

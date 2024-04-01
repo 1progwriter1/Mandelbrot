@@ -5,6 +5,7 @@
 #include <string.h>
 #include <immintrin.h>
 #include "../headers/mandelbrot_data.h"
+#include <math.h>
 
 void SetWindowData(WindowData *data) {
 
@@ -18,7 +19,6 @@ void SetWindowData(WindowData *data) {
     data->offset_y  = 0.f;
 
     data->scale_ratio = (float) SCREEN_HEIGHT / (float) SCREEN_WIDTH;
-
 }
 
 void ProceedKeyStrokes(sf::RenderWindow &window, WindowData *data) {
@@ -56,4 +56,12 @@ bool IfMeasure(const int argc, const char *argv[]) {
         return false;
 
     return strncmp(argv[1], "measure", sizeof("measure")) == 0;
+}
+
+void DrawWindow(sf::RenderWindow &window, sf::VertexArray &pixels) {
+
+    window.clear(sf::Color::Black);
+    window.draw(pixels);
+    window.display();
+
 }
