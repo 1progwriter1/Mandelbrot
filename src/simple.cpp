@@ -30,7 +30,7 @@ int main(const int argc, const char *argv[]) {
     }
     else {
         float test_sum = 0;
-        if (MeasureProgram(&data, "Results/simple_time_O3.txt", "Results/simple_ticks_O3.txt", &test_sum) != SUCCESS)
+        if (MeasureProgram(&data, "Results/simple_time_O0.txt", "Results/simple_ticks_O0.txt", &test_sum) != SUCCESS)
             return ERROR;
         printf("test sum: %f\n", test_sum);
     }
@@ -55,7 +55,7 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data, bool if_measure
             size_t dot_index = CalculateDot(x0, y0);
 
             if (if_measure) {
-                pixels[y_index * SCREEN_WIDTH + x_index].position.x = dot_index;
+                pixels[y_index * SCREEN_WIDTH + x_index].position.x = (float) dot_index;
                 continue;
             }
 

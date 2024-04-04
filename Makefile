@@ -2,7 +2,7 @@ CFLAGS=-D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Waggressive-loop-
 
 SIMD_FLAGS = -mavx -mavx2
 
-OPT=-O2
+OPT=-O0
 
 COMP=g++
 
