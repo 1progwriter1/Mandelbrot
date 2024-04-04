@@ -30,7 +30,7 @@ int main(const int argc, const char *argv[]) {
     }
     else {
         float test_sum = 0;
-        if (MeasureProgram(&data, "Results/simple_time_O0.txt", "Results/simple_ticks_O0.txt", &test_sum) != SUCCESS)
+        if (MeasureProgram(&data, SIMPLE_TIME, SIMPLE_TICKS, &test_sum) != SUCCESS)
             return ERROR;
         printf("test sum: %f\n", test_sum);
     }
