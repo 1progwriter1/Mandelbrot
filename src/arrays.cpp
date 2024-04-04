@@ -91,11 +91,14 @@ static void CalculateDots(size_t *dots_indexes, float x0, float y0, float dx) {
         float xy[8] = {};   for (size_t j = 0; j < 8; j++) xy[j] =  X[j] * Y[j];
         float r2[8] = {};   for (size_t j = 0; j < 8; j++) r2[j] = x2[j] + y2[j];
 
-        mask_is_inside = 0;
-        for (size_t j = 0; j < 8; j++)  mask_is_inside |= (r2[j] < MAX_RADIUS_SQUARE) << j;
-        if (!mask_is_inside)  break;
+        unsigned int cmp[8] = {};
+        unsigned int mask = 0;
+        for (int j = 0; j < 8; j++) cmp[j] = (r2[j] <= MAX_RADIUS_SQUARE);
+        for (int j = 0; j < 8; j++) mask |= cmp[j];
 
-        for (size_t j = 0; j < 8; j++)  dots_indexes[j] += (size_t) (mask_is_inside >> j) & 1;
+        if (!mask)  break;
+
+        for (int j = 0; j < 8; j++) dots_indexes[j] += cmp[j];
 
         for (size_t j = 0; j < 8; j++)  X[j] = x2[j] - y2[j] + X0[j];
         for (size_t j = 0; j < 8; j++)  Y[j] = xy[j] + xy[j] + y0;
@@ -133,8 +136,7 @@ static int MeasureProgram(WindowData *data, const char *time_file, const char *t
         }
 
         unsigned long long end = __rdtsc();
-        time_t time_end = clock()=-[
-        ]=-]0[\k
+        time_t time_end = clock();
 
         fprintf(ticks, "%llu\n", end - start);
         fprintf(time, "%f\n", (double) (time_end - time_start) / CLOCKS_PER_SEC);

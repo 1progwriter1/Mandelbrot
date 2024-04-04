@@ -1,7 +1,7 @@
-with open("Results/avx_ticks_O3.txt") as f:
+with open("Results/arrays_ticks_O3_loops.txt") as f:
     ticks = [float(i) for i in f.readlines()]
 
-with open("Results/avx_time_O3.txt") as f:
+with open("Results/arrays_time_O3_loops.txt") as f:
     times = [float(i) for i in f.readlines()]
 
 aver = sum(times) / len(times)
