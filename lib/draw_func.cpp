@@ -19,6 +19,11 @@ void SetWindowData(WindowData *data) {
     data->offset_y  = 0.f;
 
     data->scale_ratio = (float) SCREEN_HEIGHT / (float) SCREEN_WIDTH;
+
+    data->fps_data.font.loadFromFile(FONT_FILE);
+    data->fps_data.text.setFont(data->fps_data.font);
+    data->fps_data.text.setFillColor(sf::Color::White);
+    data->fps_data.text.setCharacterSize(20);
 }
 
 void ProceedKeyStrokes(sf::RenderWindow &window, WindowData *data) {
@@ -58,10 +63,26 @@ bool IfMeasure(const int argc, const char *argv[]) {
     return strncmp(argv[1], "measure", sizeof("measure")) == 0;
 }
 
-void DrawWindow(sf::RenderWindow &window, sf::VertexArray &pixels) {
+float GetFps(WindowData *data) {
+
+    assert(data);
+
+    return 1 / data->fps_data.clock.restart().asSeconds();
+
+}
+
+void DrawWindow(sf::RenderWindow &window, sf::VertexArray &pixels, WindowData *data) {
+
+    assert(data);
+
+    char buffer[FPS_BUFFER_LEN] = {};
+    snprintf(buffer, FPS_BUFFER_LEN - 1, "fps: %d", (int) round(GetFps(data)));
+
+    data->fps_data.text.setString(buffer);
 
     window.clear(sf::Color::Black);
     window.draw(pixels);
+    window.draw(data->fps_data.text);
     window.display();
 
 }

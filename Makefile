@@ -2,7 +2,7 @@ CFLAGS=-D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Waggressive-loop-
 
 SIMD_FLAGS = -mavx -mavx2
 
-OPT=-O3
+OPT=-O2
 
 COMP=g++
 
@@ -16,9 +16,6 @@ SFML=-lsfml-graphics -lsfml-window -lsfml-system
 %.out : %.o
 	$(COMP) $(CFLAGS) $(SIMD_FLAGS) $(OPT) $< $(LIB_OBJ) -o $@ $(SFML)
 	mv $@ ../Mandelbrot
-
-run:
-	LIBGL_ALWAYS_INDIRECT=1 ./no_sse.out
 
 clean:
 	rm *.out

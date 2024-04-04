@@ -1,7 +1,10 @@
-with open("time_no_avx.txt") as f:
-    times = [int(i) for i in f.readlines()]
+with open("Results/avx_ticks_O3.txt") as f:
+    ticks = [float(i) for i in f.readlines()]
 
-times.sort()
+with open("Results/avx_time_O3.txt") as f:
+    times = [float(i) for i in f.readlines()]
+
 aver = sum(times) / len(times)
-print(aver)
-print(max(max(times) - aver, aver - min(times)) / 100)
+print("time = ", aver)
+aver_ticks = sum(ticks) / len(ticks)
+print("ticks = ", aver_ticks / pow(10, 9), " accuracy = ", max(max(ticks) - aver_ticks, aver_ticks - min(ticks)) / pow(10, 9))

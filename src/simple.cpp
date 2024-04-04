@@ -7,7 +7,7 @@
 
 static void SetPixels(sf::VertexArray &pixels, WindowData *data, bool if_measure);
 static size_t CalculateDot(float x0, float y0);
-static int MeasureProgram(WindowData *data, const char *time_file, const char *ticks_file);
+static int MeasureProgram(WindowData *data, const char *time_file, const char *ticks_file, float *test_sum);
 
 int main(const int argc, const char *argv[]) {
 
@@ -25,13 +25,14 @@ int main(const int argc, const char *argv[]) {
 
             SetPixels(pixels, &data, false);
 
-            window.clear(sf::Color::Black);
-            window.draw(pixels);
-            window.display();
+            DrawWindow(window, pixels, &data);
         }
     }
     else {
-        return MeasureProgram(&data, SIMPLE_TIME, SIMPLE_TICKS);
+        float test_sum = 0;
+        if (MeasureProgram(&data, "Results/simple_time_O3.txt", "Results/simple_ticks_O3.txt", &test_sum) != SUCCESS)
+            return ERROR;
+        printf("test sum: %f\n", test_sum);
     }
 
     return SUCCESS;
@@ -44,7 +45,7 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data, bool if_measure
     float dy = data->dy * data->scale * data->scale_ratio;
     float dx = data->dx * data->scale;
 
-    for (unsigned int y_index = 0; y_index < SCREEN_WIDTH; y_index++) {
+    for (unsigned int y_index = 0; y_index < SCREEN_HEIGHT; y_index++) {
 
         float x0 = (-((float) SCREEN_WIDTH) / 2) * dx + data->offset_x * data->scale;
         float y0 = (((float) y_index) - (float) SCREEN_HEIGHT / 2) * dy + data->offset_y * data->scale * data->scale_ratio;
@@ -53,7 +54,10 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data, bool if_measure
 
             size_t dot_index = CalculateDot(x0, y0);
 
-            if (if_measure) continue;
+            if (if_measure) {
+                pixels[y_index * SCREEN_WIDTH + x_index].position.x = dot_index;
+                continue;
+            }
 
             size_t index = y_index * SCREEN_WIDTH + x_index;
             pixels[index].position = sf::Vector2f((float) x_index, (float) y_index);
@@ -88,11 +92,13 @@ static size_t CalculateDot(float x0, float y0) {
     return dot_index;
 }
 
-static int MeasureProgram(WindowData *data, const char *time_file, const char *ticks_file) {
+static int MeasureProgram(WindowData *data, const char *time_file, const char *ticks_file, float *test_sum) {
 
     assert(data);
     assert(time_file);
     assert(ticks_file);
+    assert(test_sum);
+
 
     FILE *time  = fopen(time_file, "w");
     if (!time)  return FILE_OPEN_ERROR;
@@ -103,15 +109,17 @@ static int MeasureProgram(WindowData *data, const char *time_file, const char *t
         return FILE_OPEN_ERROR;
     }
 
-    sf::VertexArray pixels = {};
-
+    float tmp_sum = 0;
+    sf::VertexArray pixels(sf::Points, SCREEN_WIDTH * SCREEN_HEIGHT);
     for (size_t i = 0; i < NUMBER_OF_MEASUREMENTS; i++) {
 
         time_t time_start = clock();
         unsigned long long start = __rdtsc();
 
-        for (size_t j = 0; j < NUMBER_OF_SCREENS; j++)
+        for (size_t j = 0; j < NUMBER_OF_SCREENS; j++) {
             SetPixels(pixels, data, true);
+            tmp_sum += pixels[(unsigned int) rand() % SCREEN_HEIGHT * SCREEN_WIDTH].position.x;
+        }
 
         unsigned long long end = __rdtsc();
         time_t time_end = clock();
@@ -119,6 +127,8 @@ static int MeasureProgram(WindowData *data, const char *time_file, const char *t
         fprintf(ticks, "%llu\n", end - start);
         fprintf(time, "%f\n", (double) (time_end - time_start) / CLOCKS_PER_SEC);
     }
+
+    *test_sum = tmp_sum;
 
     fclose(ticks);
     fclose(time);

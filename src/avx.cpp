@@ -9,7 +9,7 @@
 const __m256 _76543210 = _mm256_set_ps(7.f, 6.f, 5.f, 4.f, 3.f, 2.f, 1.f, 0.f);
 const __m256 MAX_RADIUS_SQUARE_SIMD = _mm256_set1_ps(100.f);
 
-static int MeasureProgram(WindowData *data, const char *time_file, const char *ticks_file);
+static int MeasureProgram(WindowData *data, const char *time_file, const char *ticks_file, float *test_sum);
 static void SetPixels(sf::VertexArray &pixels, WindowData *data, bool if_measure);
 static __m256i CalculateDots(float x0, float y0, float dx);
 
@@ -30,11 +30,14 @@ int main(const int argc, const char *argv[]) {
 
             SetPixels(pixels, &data, false);
 
-            DrawWindow(window, pixels);
+            DrawWindow(window, pixels, &data);
         }
     }
     else {
-        return MeasureProgram(&data, ARRAYS_TIME, ARRAYS_TICKS);
+        float test_sum = 0;
+        if (MeasureProgram(&data, "Results/avx_time_O3.txt", "Results/avx_ticks_O3.txt", &test_sum) != SUCCESS)
+            return ERROR;
+        printf("test sum: %f\n", test_sum);
     }
 
     return 0;
@@ -56,7 +59,10 @@ static void SetPixels(sf::VertexArray &pixels, WindowData *data, bool if_measure
 
             __m256i cur_dot_index = CalculateDots(x0, y0, dx);
 
-            if (if_measure) continue;
+            if (if_measure) {
+                pixels[y_index * SCREEN_WIDTH + x_index].position.x = dot_index;
+                continue;
+            }
 
             int *int_cur_dot = (int *) &cur_dot_index;
             for (unsigned int i = 0; i < 8; i++) {
@@ -103,11 +109,12 @@ static __m256i CalculateDots(float x0, float y0, float dx) {
         return dots_indexes;
 }
 
-static int MeasureProgram(WindowData *data, const char *time_file, const char *ticks_file) {
+static int MeasureProgram(WindowData *data, const char *time_file, const char *ticks_file, float *test_sum) {
 
     assert(data);
     assert(time_file);
     assert(ticks_file);
+    assert(test_sum);
 
     FILE *time  = fopen(time_file, "w");
     if (!time)  return FILE_OPEN_ERROR;
@@ -118,15 +125,19 @@ static int MeasureProgram(WindowData *data, const char *time_file, const char *t
         return FILE_OPEN_ERROR;
     }
 
-    sf::VertexArray pixels = {};
-
+    float tmp_sum = 0;
+    sf::VertexArray pixels(sf::Points, SCREEN_WIDTH * SCREEN_HEIGHT);
     for (size_t i = 0; i < NUMBER_OF_MEASUREMENTS; i++) {
+
+        printf("measurement №%lu\n", i + 1);
 
         time_t time_start = clock();
         unsigned long long start = __rdtsc();
 
-        for (size_t j = 0; j < NUMBER_OF_SCREENS; j++)
+        for (size_t j = 0; j < NUMBER_OF_SCREENS; j++) {
             SetPixels(pixels, data, true);
+            tmp_sum += pixels[(unsigned int) rand() % SCREEN_HEIGHT * SCREEN_WIDTH].position.x;
+        }
 
         unsigned long long end = __rdtsc();
         time_t time_end = clock();
@@ -137,6 +148,8 @@ static int MeasureProgram(WindowData *data, const char *time_file, const char *t
 
     fclose(ticks);
     fclose(time);
+
+    *test_sum = tmp_sum;
 
     return SUCCESS;
 }

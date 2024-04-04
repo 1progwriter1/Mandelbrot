@@ -22,8 +22,8 @@ enum ExitCodes {
 const float DEFAULT_ZOOM = 12/10.f;
 const float BIG_ZOOM     = 20/10.f;
 
-const size_t NUMBER_OF_MEASUREMENTS = (size_t) 1e2;
-const size_t NUMBER_OF_SCREENS      = (size_t) 1e5;
+const size_t NUMBER_OF_MEASUREMENTS = 10;
+const size_t NUMBER_OF_SCREENS      = 100;
 
 const unsigned int SCREEN_WIDTH  = 800;
 const unsigned int SCREEN_HEIGHT = 600;
@@ -36,6 +36,13 @@ const float MAX_RADIUS_SQUARE = 100.f;
 
 const size_t FPS_BUFFER_LEN = 64;
 
+struct FpsTextData {
+
+    sf::Text text;
+    sf::Font font;
+    sf::Clock clock;
+};
+
 struct WindowData {
 
     float dx;
@@ -45,6 +52,8 @@ struct WindowData {
     float offset_y;
     float scale;
     float scale_ratio;
+
+    FpsTextData fps_data;
 };
 
 #endif

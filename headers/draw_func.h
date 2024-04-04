@@ -7,6 +7,7 @@
 void SetWindowData(WindowData *data);
 bool IfMeasure(const int argc, const char *argv[]);
 void ProceedKeyStrokes(sf::RenderWindow &window, WindowData *data);
-void DrawWindow(sf::RenderWindow &window, sf::VertexArray &pixels);
+float GetFps(WindowData *data);
+void DrawWindow(sf::RenderWindow &window, sf::VertexArray &pixels, WindowData *data);
 
 #endif
